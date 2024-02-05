@@ -28,25 +28,24 @@ public class JwtUtil {
     public String generateToken(AppUser appUser) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(jwtSecret.getBytes(StandardCharsets.UTF_8));
-            String token = JWT.create()
+            return JWT.create()
                     .withIssuer(appName)
                     .withSubject(appUser.getId())
                     .withExpiresAt(Instant.now().plusSeconds(jwtExpirationInSecond))
                     .withIssuedAt(Instant.now())
                     .withClaim("app",appUser.getRole().name())
                     .sign(algorithm);
-            return token;
-        }catch (JWTCreationException e) {
+        } catch (JWTCreationException e) {
             throw new RuntimeException();
         }
     }
     public boolean verifyJwtToken(String token){
-        try{
+        try {
             Algorithm algorithm = Algorithm.HMAC256(jwtSecret.getBytes(StandardCharsets.UTF_8));
             JWTVerifier verifier = JWT.require(algorithm).build();
             DecodedJWT decodedJWT = verifier.verify(token);
             return decodedJWT.getIssuer().equals(appName);
-        }catch (JWTVerificationException e) {
+        } catch (JWTVerificationException e) {
             throw new RuntimeException();
         }
     }
