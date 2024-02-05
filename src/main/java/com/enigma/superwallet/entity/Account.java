@@ -27,13 +27,13 @@ public class Account {
     @Column(name = "account_number", nullable = false, unique = true)
     private String accountNumber;
 
-    @Column(name = "region_code", nullable = false)
-    private String regionCode;
+    @Column(name = "currency_code", nullable = false)
+    private String currencyCode;
 
     @Column(nullable = false)
     private String pin;
 
-    @Column(columnDefinition =  "DOUBLE PRECISION CHECK (balance > 0)")
+    @Column(columnDefinition =  "DOUBLE PRECISION CHECK (balance >= 0)")
     private Double balance;
 
     @ManyToOne
