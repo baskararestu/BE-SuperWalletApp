@@ -37,12 +37,7 @@ public class AuthTokenFilter {
                                 .anyRequest()
                                 .authenticated())
                 .sessionManagement(session ->session.sessionCreationPolicy(STATELESS))
-//                .authenticationProvider(authenticationProvider)
                 .addFilterBefore((Filter) authTokenFilter, UsernamePasswordAuthenticationFilter.class);
-//                .logout(logout -> logout.logoutUrl("/api/auth/logout")
-//                        .addLogoutHandler(logoutHandler)
-//                        .logoutSuccessHandler(((request, response, authentication) -> SecurityContextHolder.clearContext())))
-//        ;
         return http.build();
     }
 }

@@ -25,7 +25,7 @@ public class SecurityConfiguration extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try{
-            //Validasi Token JWT
+
             String headerAuth = request.getHeader("Authorization");
             String token = null;
             if (headerAuth !=null && headerAuth.startsWith("Bearer ")){
@@ -33,17 +33,15 @@ public class SecurityConfiguration extends OncePerRequestFilter {
 
             }
             if(token !=null && jwtUtil.verifyJwtToken(token)) {
-                //set auth ke spring security
+
                 Map<String,String> userInfo = jwtUtil.getUserInfoByToken(token);
                 UserDetails user = userService.loadUserByUserId(userInfo.get("userId"));
                 System.out.println("terverify");
-                //Validasi Token
+
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user,null,user.getAuthorities());
 
-                //Menambahkan informasi berupa Ip Address ke host dalam bentuk Security
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource());
 
-                //Menyimpan Auth Ke Spring Context
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             }
         }catch (Exception e) {

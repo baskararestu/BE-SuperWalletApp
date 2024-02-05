@@ -1,4 +1,4 @@
-package com.enigma.superwallet.dto.Response;
+package com.enigma.superwallet.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)
-public class LoginResponse {
+public class RegisterResponse {
     private String email;
-    private String token;
     private String role;
 }

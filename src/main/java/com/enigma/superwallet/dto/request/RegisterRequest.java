@@ -1,11 +1,10 @@
-package com.enigma.superwallet.dto.Request;
+package com.enigma.superwallet.dto.request;
 
+import com.enigma.superwallet.constant.Gender;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
@@ -17,4 +16,7 @@ public class RegisterRequest {
     private String lastName;
     private String phoneNumber;
     private String birthDate;
+    private Gender gender;
+    private String email;
+    private String password;
 }

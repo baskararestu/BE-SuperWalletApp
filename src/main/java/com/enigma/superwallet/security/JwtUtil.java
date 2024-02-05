@@ -18,18 +18,18 @@ import java.util.Map;
 @Component
 public class JwtUtil {
 
-    @Value("${app.loan_app.jwt.jwt-secret}")
+    @Value("${app.super_wallet.jwt.jwt-secret}")
     private String jwtSecret;
-    @Value("${app.loan_app.jwt.app-name}")
+    @Value("${app.super_wallet.jwt.app-name}")
     private String appName;
-    @Value("${app.loan_app.jwt.jwtExpirationInSecond}")
+    @Value("${app.super_wallet.jwt.jwtExpirationInSecond}")
     private long jwtExpirationInSecond;
 
     public String generateToken(AppUser appUser) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(jwtSecret.getBytes(StandardCharsets.UTF_8));
             String token = JWT.create()
-                    .withIssuer(appName) //info untuk application name
+                    .withIssuer(appName)
                     .withSubject(appUser.getId())
                     .withExpiresAt(Instant.now().plusSeconds(jwtExpirationInSecond))
                     .withIssuedAt(Instant.now())
