@@ -28,7 +28,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         try {
             String headerAuth = request.getHeader("Authorization");
             String token = null;
-            if (headerAuth != null && headerAuth.startsWith("Bearer")) token = headerAuth.substring(7);
+            if (headerAuth != null && headerAuth.startsWith("Bearer ")) token = headerAuth.substring(7);
             if (token != null && jwtUtil.verifyJwtToken(token)) {
                 Map<String, String> userInfo = jwtUtil.getUserInfoByToken(token);
                 UserDetails user = userService.loadUserByUserId(userInfo.get("userId"));

@@ -18,12 +18,24 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public AppUser loadUserByUserId(String id) {
-        return null;
+        UserCredential userCredential = userCredentialRepository.findById(id).orElseThrow(()-> new UsernameNotFoundException("Invalid Credential"));
+        return AppUser.builder()
+                .id(userCredential.getId())
+                .email(userCredential.getEmail())
+                .password(userCredential.getPassword())
+                .role(userCredential.getRole().getRole())
+                .build();
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return null;
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        UserCredential userCredential = userCredentialRepository.findByEmail(email).orElseThrow(()-> new UsernameNotFoundException("Invalid Credential"));
+        return AppUser.builder()
+                .id(userCredential.getId())
+                .email(userCredential.getEmail())
+                .password(userCredential.getPassword())
+                .role(userCredential.getRole().getRole())
+                .build();
     }
 
     @Override

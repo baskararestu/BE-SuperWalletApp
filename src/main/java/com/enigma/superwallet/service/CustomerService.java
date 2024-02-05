@@ -7,6 +7,7 @@ import com.enigma.superwallet.entity.Customer;
 import java.util.List;
 
 public interface CustomerService {
+    CustomerResponse createCustomer(Customer customer);
     List<CustomerResponse> getAll();
     CustomerResponse getById(String id);
     CustomerResponse update(RegisterRequest registerRequest);

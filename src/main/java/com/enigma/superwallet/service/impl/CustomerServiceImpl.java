@@ -26,6 +26,16 @@ public class CustomerServiceImpl implements CustomerService {
 
 
     @Override
+    public CustomerResponse createCustomer(Customer customer) {
+        Customer customer1 = customerRepository.saveAndFlush(customer);
+        return CustomerResponse.builder()
+                .id(customer1.getId())
+                .firstName(customer1.getFirstName())
+                .lastName(customer1.getLastName())
+                .build();
+    }
+
+    @Override
     public List<CustomerResponse> getAll() {
         return customerRepository.findAll().stream()
                 .filter(Customer::getIsActive)
