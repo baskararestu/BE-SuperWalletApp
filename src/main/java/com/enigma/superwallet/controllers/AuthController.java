@@ -6,12 +6,14 @@ import com.enigma.superwallet.dto.request.AuthAdminRequest;
 import com.enigma.superwallet.dto.request.LoginRequest;
 import com.enigma.superwallet.dto.request.RegisterRequest;
 import com.enigma.superwallet.dto.response.DefaultResponse;
+import com.enigma.superwallet.dto.response.LoginAdminResponse;
 import com.enigma.superwallet.dto.response.LoginResponse;
 import com.enigma.superwallet.dto.response.RegisterResponse;
 import com.enigma.superwallet.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -52,4 +54,42 @@ public class AuthController {
         return authService.login(loginRequest);
     }
 
+    @PostMapping("/login/admins")
+    public ResponseEntity loginAdmin(@RequestBody LoginRequest loginRequest){
+        try {
+            LoginAdminResponse loginAdminResponse = authService.loginAdmin(loginRequest);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(DefaultResponse.builder()
+                            .statusCode(HttpStatus.OK.value())
+                            .message("Successfully login admins")
+                            .data(loginAdminResponse)
+                            .build());
+        }catch (ResponseStatusException e){
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(DefaultResponse.builder()
+                            .statusCode(e.getStatusCode().value())
+                            .message(e.getReason())
+                            .build());
+        }
+    }
+
+    @PostMapping("/admins")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    public ResponseEntity createAdmin (@RequestBody AuthAdminRequest authAdminRequest){
+        try {
+            RegisterResponse registerResponse = authService.registerAdmin(authAdminRequest);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(DefaultResponse.builder()
+                            .statusCode(HttpStatus.CREATED.value())
+                            .message("Successfully create admin account")
+                            .data(registerResponse)
+                            .build());
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(DefaultResponse.builder()
+                            .statusCode(e.getStatusCode().value())
+                            .message(e.getReason())
+                            .build());
+        }
+    }
 }

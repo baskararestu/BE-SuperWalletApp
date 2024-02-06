@@ -12,4 +12,5 @@ public interface CustomerService {
     CustomerResponse getById(String id);
     CustomerResponse update(RegisterRequest registerRequest);
     Boolean delete(String id);
+    CustomerResponse getCustomerByUserCredentialId (String userCredentialId);
 }

@@ -137,4 +137,18 @@ public class CustomerServiceImpl implements CustomerService {
         }
         return false;
     }
+
+    @Override
+    public CustomerResponse getCustomerByUserCredentialId(String id){
+        Customer customer = customerRepository.findCustomerByUserCredentialId(id);
+        return CustomerResponse.builder()
+                .id(customer.getId())
+                .firstName(customer.getFirstName())
+                .lastName(customer.getLastName())
+                .birthDate(customer.getBirthDate())
+                .gender(customer.getGender())
+                .phoneNumber(customer.getPhoneNumber())
+                .address(customer.getAddress())
+                .build();
+    }
 }
