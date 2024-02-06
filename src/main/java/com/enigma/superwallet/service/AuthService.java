@@ -1,5 +1,6 @@
 package com.enigma.superwallet.service;
 
+import com.enigma.superwallet.dto.request.AuthAdminRequest;
 import com.enigma.superwallet.dto.request.LoginRequest;
 import com.enigma.superwallet.dto.request.RegisterRequest;
 import com.enigma.superwallet.dto.response.LoginResponse;

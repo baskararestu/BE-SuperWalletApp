@@ -48,7 +48,7 @@ public class CustomerServiceImpl implements CustomerService {
                         .gender(customer.getGender())
                         .userCredential(UserCredentialResponse.builder()
                                 .email(customer.getUserCredential().getEmail())
-                                .role(customer.getUserCredential().getRole().getRole())
+                                .role(customer.getUserCredential().getRole().getRoleName())
                                 .build())
                         .build())
                 .toList();
@@ -67,7 +67,7 @@ public class CustomerServiceImpl implements CustomerService {
                     .gender(customer.getGender())
                     .userCredential(UserCredentialResponse.builder()
                             .email(customer.getUserCredential().getEmail())
-                            .role(customer.getUserCredential().getRole().getRole())
+                            .role(customer.getUserCredential().getRole().getRoleName())
                             .build())
                     .build();
         }
@@ -109,7 +109,7 @@ public class CustomerServiceImpl implements CustomerService {
                     .gender(updatedCustomer.getGender())
                     .userCredential(UserCredentialResponse.builder()
                             .email(userCredential.getEmail())
-                            .role(userCredential.getRole().getRole())
+                            .role(userCredential.getRole().getRoleName())
                             .build())
                     .build();
         }

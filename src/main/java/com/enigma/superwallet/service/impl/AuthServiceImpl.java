@@ -2,23 +2,35 @@ package com.enigma.superwallet.service.impl;
 
 import com.enigma.superwallet.constant.ERole;
 import com.enigma.superwallet.dto.request.AuthAdminRequest;
+import com.enigma.superwallet.dto.request.LoginRequest;
+import com.enigma.superwallet.dto.request.RegisterRequest;
+import com.enigma.superwallet.dto.response.CustomerResponse;
+import com.enigma.superwallet.dto.response.LoginResponse;
 import com.enigma.superwallet.dto.response.RegisterResponse;
-import com.enigma.superwallet.entity.Admin;
-import com.enigma.superwallet.entity.Role;
-import com.enigma.superwallet.entity.UserCredential;
+import com.enigma.superwallet.entity.*;
 import com.enigma.superwallet.repository.RoleRepository;
 import com.enigma.superwallet.repository.UserCredentialRepository;
+import com.enigma.superwallet.security.JwtUtil;
 import com.enigma.superwallet.service.AdminService;
 import com.enigma.superwallet.service.AuthService;
+import com.enigma.superwallet.service.CustomerService;
 import com.enigma.superwallet.service.RoleService;
+import com.enigma.superwallet.util.ValidationUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -82,9 +94,10 @@ public class AuthServiceImpl implements AuthService {
         try {
             validationUtil.validate(registerRequest);
             Role role = Role.builder()
-                    .role(ERole.ROLE_CUSTOMER)
+                    .roleName(ERole.ROLE_CUSTOMER)
                     .build();
             Role roleSaved = roleService.getOrSave(role);
+            System.out.println(roleSaved);
 
             UserCredential userCredential = UserCredential.builder()
                     .email(registerRequest.getEmail())
@@ -94,7 +107,6 @@ public class AuthServiceImpl implements AuthService {
                     .updatedAt(LocalDateTime.now())
                     .build();
             userCredentialRepository.saveAndFlush(userCredential);
-
             Customer customer = Customer.builder()
                     .userCredential(userCredential)
                     .firstName(registerRequest.getFirstName())
@@ -103,14 +115,17 @@ public class AuthServiceImpl implements AuthService {
                     .phoneNumber(registerRequest.getPhoneNumber())
                     .isActive(true)
                     .gender(registerRequest.getGender())
+                    .address(registerRequest.getAddress())
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
                     .build();
             customerService.createCustomer(customer);
 
             return RegisterResponse.builder()
+                    .fullName(registerRequest.getFirstName() +" "+registerRequest.getLastName())
                     .email(userCredential.getEmail())
-                    .role(userCredential.getRole().getRole().toString())
+                    .phoneNumber(registerRequest.getPhoneNumber())
+                    .role(userCredential.getRole().getRoleName())
                     .build();
         }catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,"User Already Exist");

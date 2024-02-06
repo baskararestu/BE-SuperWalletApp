@@ -19,5 +19,6 @@ public class CustomerResponse {
     private String phoneNumber;
     private LocalDate birthDate;
     private Gender gender;
+    private String address;
     private UserCredentialResponse userCredential;
 }
