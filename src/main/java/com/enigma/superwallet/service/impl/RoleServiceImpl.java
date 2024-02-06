@@ -11,12 +11,10 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class RoleServiceImpl implements RoleService {
-
     private final RoleRepository roleRepository;
-
     @Override
     public Role getOrSave(Role role) {
-        Optional<Role> optionalRole = roleRepository.findByRole(role.getRole());
+        Optional<Role> optionalRole = roleRepository.findByRoleName(role.getRoleName());
         if(!optionalRole.isEmpty()){
             return optionalRole.get();
         }

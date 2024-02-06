@@ -1,49 +1,81 @@
 package com.enigma.superwallet.service.impl;
 
 import com.enigma.superwallet.constant.ERole;
-import com.enigma.superwallet.dto.request.LoginRequest;
-import com.enigma.superwallet.dto.request.RegisterRequest;
-import com.enigma.superwallet.dto.response.CustomerResponse;
-import com.enigma.superwallet.dto.response.LoginResponse;
+import com.enigma.superwallet.dto.request.AuthAdminRequest;
 import com.enigma.superwallet.dto.response.RegisterResponse;
-import com.enigma.superwallet.entity.AppUser;
-import com.enigma.superwallet.entity.Customer;
+import com.enigma.superwallet.entity.Admin;
 import com.enigma.superwallet.entity.Role;
 import com.enigma.superwallet.entity.UserCredential;
+import com.enigma.superwallet.repository.RoleRepository;
 import com.enigma.superwallet.repository.UserCredentialRepository;
-import com.enigma.superwallet.security.JwtUtil;
+import com.enigma.superwallet.service.AdminService;
 import com.enigma.superwallet.service.AuthService;
-import com.enigma.superwallet.service.CustomerService;
 import com.enigma.superwallet.service.RoleService;
-import com.enigma.superwallet.util.ValidationUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
-
     private final UserCredentialRepository userCredentialRepository;
     private final PasswordEncoder passwordEncoder;
-    private final CustomerService customerService;
+    private final RoleRepository roleRepository;
+    private final AdminService adminService;
     private final RoleService roleService;
-    private final JwtUtil jwtUtil;
+    private final CustomerService customerService;
     private final AuthenticationManager authenticationManager;
     private final ValidationUtil validationUtil;
+    private final JwtUtil jwtUtil;
 
+    @Transactional
+    @Override
+    public RegisterResponse registerSuperAdmin(AuthAdminRequest authAdminRequest) {
+        try {
+            Optional<Role> superAdminRole = roleRepository.findByRoleName(ERole.ROLE_SUPER_ADMIN);
+            if (superAdminRole.isPresent()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Super admin already exists");
+            }
+            Role role = Role.builder()
+                    .roleName(ERole.ROLE_SUPER_ADMIN)
+                    .build();
+            role = roleService.getOrSave(role);
+
+            UserCredential userCredential = UserCredential.builder()
+                    .email(authAdminRequest.getEmail())
+                    .password(passwordEncoder.encode(authAdminRequest.getPassword()))
+                    .role(role)
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .build();
+            userCredentialRepository.saveAndFlush(userCredential);
+            Admin admin = Admin.builder()
+                    .fullName(authAdminRequest.getFullName())
+                    .userCredential(userCredential)
+                    .address(authAdminRequest.getAddress())
+                    .phoneNumber(authAdminRequest.getPhoneNumber())
+                    .isActive(true)
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .build();
+            adminService.createSuperAdmin(admin);
+            return  RegisterResponse.builder()
+                    .email(userCredential.getEmail())
+                    .fullName(authAdminRequest.getFullName())
+                    .phoneNumber(authAdminRequest.getPhoneNumber())
+                    .role(ERole.ROLE_SUPER_ADMIN)
+                    .build();
+
+        } catch (Exception e){
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "user admin already exist");
+        }
+    }
     @Transactional(rollbackOn = Exception.class)
     @Override
     public RegisterResponse register(RegisterRequest registerRequest) {
@@ -87,7 +119,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
-
         validationUtil.validate(loginRequest);
         System.out.println("2");
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail().toLowerCase(),loginRequest.getPassword()));
@@ -95,19 +126,6 @@ public class AuthServiceImpl implements AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         AppUser appUser = (AppUser) authentication.getPrincipal();
         String token = jwtUtil.generateToken(appUser);
-
-
-
-//        validationUtil.validate(request);
-//        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-//                request.getEmail().toLowerCase(),
-//                request.getPassword()
-//        ));
-//        SecurityContextHolder.getContext().setAuthentication(authentication);
-//
-//        AppUser appUser = (AppUser) authentication.getPrincipal();
-//        String token = jwtUtil.generateToken(appUser);
-
 
         List<CustomerResponse> customerResponse = customerService.getAll();
         String email = loginRequest.getEmail();
