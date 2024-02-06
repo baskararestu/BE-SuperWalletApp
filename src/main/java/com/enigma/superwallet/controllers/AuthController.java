@@ -44,25 +44,16 @@ public class AuthController {
                             .build());
         }
     }
+
     @PostMapping("/register")
-    public RegisterResponse response(@RequestBody RegisterRequest registerRequest) {
-        return authService.register(registerRequest);
-    }
-
-    @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest loginRequest) {
-        return authService.login(loginRequest);
-    }
-
-    @PostMapping("/login/admins")
-    public ResponseEntity loginAdmin(@RequestBody LoginRequest loginRequest){
+    public ResponseEntity registerCustomer(@RequestBody RegisterRequest registerRequest) {
         try {
-            LoginAdminResponse loginAdminResponse = authService.loginAdmin(loginRequest);
+            RegisterResponse data = authService.register(registerRequest);
             return ResponseEntity.status(HttpStatus.OK)
                     .body(DefaultResponse.builder()
                             .statusCode(HttpStatus.OK.value())
-                            .message("Successfully login admins")
-                            .data(loginAdminResponse)
+                            .message("Login successfully")
+                            .data(data)
                             .build());
         }catch (ResponseStatusException e){
             return ResponseEntity.status(e.getStatusCode())
@@ -73,16 +64,54 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/login")
+    public ResponseEntity loginCustomer(@RequestBody LoginRequest loginRequest) {
+        try {
+            LoginResponse data = authService.login(loginRequest);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(DefaultResponse.builder()
+                            .statusCode(HttpStatus.OK.value())
+                            .message("Login successfully")
+                            .data(data)
+                            .build());
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(DefaultResponse.builder()
+                            .statusCode(e.getStatusCode().value())
+                            .message(e.getReason())
+                            .build());
+        }
+    }
+
+    @PostMapping("/login/admins")
+    public ResponseEntity loginAdmin(@RequestBody LoginRequest loginRequest) {
+        try {
+            LoginAdminResponse data = authService.loginAdmin(loginRequest);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(DefaultResponse.builder()
+                            .statusCode(HttpStatus.OK.value())
+                            .message("Successfully login admins")
+                            .data(data)
+                            .build());
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(DefaultResponse.builder()
+                            .statusCode(e.getStatusCode().value())
+                            .message(e.getReason())
+                            .build());
+        }
+    }
+
     @PostMapping("/admins")
     @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
-    public ResponseEntity createAdmin (@RequestBody AuthAdminRequest authAdminRequest){
+    public ResponseEntity createAdmin(@RequestBody AuthAdminRequest authAdminRequest) {
         try {
-            RegisterResponse registerResponse = authService.registerAdmin(authAdminRequest);
+            RegisterResponse data = authService.registerAdmin(authAdminRequest);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(DefaultResponse.builder()
                             .statusCode(HttpStatus.CREATED.value())
                             .message("Successfully create admin account")
-                            .data(registerResponse)
+                            .data(data)
                             .build());
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())

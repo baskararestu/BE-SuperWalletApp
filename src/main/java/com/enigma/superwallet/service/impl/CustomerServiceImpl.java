@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -139,16 +140,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public CustomerResponse getCustomerByUserCredentialId(String id){
-        Customer customer = customerRepository.findCustomerByUserCredentialId(id);
-        return CustomerResponse.builder()
-                .id(customer.getId())
-                .firstName(customer.getFirstName())
-                .lastName(customer.getLastName())
-                .birthDate(customer.getBirthDate())
-                .gender(customer.getGender())
-                .phoneNumber(customer.getPhoneNumber())
-                .address(customer.getAddress())
-                .build();
+    public Optional<Customer> getCustomerByUserCredentialId(String id) {
+        return customerRepository.findByUserCredentialId(id);
     }
 }
