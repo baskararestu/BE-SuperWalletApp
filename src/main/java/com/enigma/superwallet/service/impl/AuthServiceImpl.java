@@ -135,17 +135,16 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
         validationUtil.validate(loginRequest);
-        System.out.println("2");
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail().toLowerCase(),loginRequest.getPassword()));
-        System.out.println("1");
         SecurityContextHolder.getContext().setAuthentication(authentication);
         AppUser appUser = (AppUser) authentication.getPrincipal();
         String token = jwtUtil.generateToken(appUser);
 
         List<CustomerResponse> customerResponse = customerService.getAll();
         String email = loginRequest.getEmail();
-        String firstName = customerResponse.stream().filter(customerResponse1 -> customerResponse1.getUserCredential().getEmail().equals(email)).toList().get(0).getFirstName();
-        String lastName = customerResponse.stream().filter(customerResponse1 -> customerResponse1.getUserCredential().getEmail().equals(email)).toList().get(0).getLastName();
+        CustomerResponse currentCustomer = customerResponse.stream().filter(customerResponse1 -> customerResponse1.getUserCredential().getEmail().equals(email)).toList().get(0);
+        String firstName = currentCustomer.getFirstName();
+        String lastName = currentCustomer.getLastName();
         return LoginResponse.builder()
                 .email(email)
                 .firstName(firstName)

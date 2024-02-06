@@ -12,10 +12,7 @@ import com.enigma.superwallet.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
@@ -25,7 +22,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/admins/super-admin")
-    public ResponseEntity createAdminAccount(@RequestBody AuthAdminRequest authAdminRequest) {
+    public ResponseEntity<?> createAdminAccount(@RequestBody AuthAdminRequest authAdminRequest) {
         try {
             RegisterResponse registerResponse = authService.registerSuperAdmin(authAdminRequest);
             return ResponseEntity.status(HttpStatus.CREATED)
