@@ -52,7 +52,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.OK)
                     .body(DefaultResponse.builder()
                             .statusCode(HttpStatus.OK.value())
-                            .message("Login successfully")
+                            .message("Register successfully")
                             .data(data)
                             .build());
         }catch (ResponseStatusException e){
