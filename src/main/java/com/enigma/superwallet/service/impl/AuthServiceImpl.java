@@ -4,7 +4,7 @@ import com.enigma.superwallet.constant.ERole;
 import com.enigma.superwallet.dto.request.AuthAdminRequest;
 import com.enigma.superwallet.dto.request.LoginRequest;
 import com.enigma.superwallet.dto.request.RegisterRequest;
-import com.enigma.superwallet.dto.response.CustomerResponse;
+import com.enigma.superwallet.dto.response.LoginAdminResponse;
 import com.enigma.superwallet.dto.response.LoginResponse;
 import com.enigma.superwallet.dto.response.RegisterResponse;
 import com.enigma.superwallet.entity.*;
@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,16 +29,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
+import static com.enigma.superwallet.mapper.UserCredentialMapper.*;
+import static com.enigma.superwallet.mapper.AuthResponseMapper.*;
+import static com.enigma.superwallet.mapper.AdminMapper.*;
+import static com.enigma.superwallet.mapper.CustomerMapper.*;
+
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final UserCredentialRepository userCredentialRepository;
-    private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
     private final AdminService adminService;
     private final RoleService roleService;
@@ -45,6 +47,24 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final ValidationUtil validationUtil;
     private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
+
+    private Authentication getAuthentication(LoginRequest loginRequest) {
+        validationUtil.validate(loginRequest);
+        return authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail().toLowerCase(), loginRequest.getPassword()));
+    }
+
+    private String getEncryptPassword(AuthAdminRequest authAdminRequest) {
+        return passwordEncoder.encode(authAdminRequest.getPassword());
+    }
+
+    private Role getRole(ERole roleName) {
+        Role role = Role.builder()
+                .roleName(roleName)
+                .build();
+        role = roleService.getOrSave(role);
+        return role;
+    }
 
     @Transactional
     @Override
@@ -54,104 +74,91 @@ public class AuthServiceImpl implements AuthService {
             if (superAdminRole.isPresent()) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Super admin already exists");
             }
-            Role role = Role.builder()
-                    .roleName(ERole.ROLE_SUPER_ADMIN)
-                    .build();
-            role = roleService.getOrSave(role);
+            Role role = getRole(ERole.ROLE_SUPER_ADMIN);
+            String passwordHashed = getEncryptPassword(authAdminRequest);
 
-            UserCredential userCredential = UserCredential.builder()
-                    .email(authAdminRequest.getEmail())
-                    .password(passwordEncoder.encode(authAdminRequest.getPassword()))
-                    .role(role)
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .build();
+            UserCredential userCredential = mapToUserCredential(authAdminRequest, passwordHashed, role);
             userCredentialRepository.saveAndFlush(userCredential);
-            Admin admin = Admin.builder()
-                    .fullName(authAdminRequest.getFullName())
-                    .userCredential(userCredential)
-                    .address(authAdminRequest.getAddress())
-                    .phoneNumber(authAdminRequest.getPhoneNumber())
-                    .isActive(true)
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .build();
-            adminService.createSuperAdmin(admin);
-            return  RegisterResponse.builder()
-                    .email(userCredential.getEmail())
-                    .fullName(authAdminRequest.getFullName())
-                    .phoneNumber(authAdminRequest.getPhoneNumber())
-                    .role(ERole.ROLE_SUPER_ADMIN)
-                    .build();
 
-        } catch (Exception e){
+            Admin admin = mapToAdminRequest(authAdminRequest, userCredential);
+            adminService.createSuperAdmin(admin);
+            return mapToRegisterResponse(userCredential, authAdminRequest);
+
+        } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "user admin already exist");
         }
     }
+
     @Transactional(rollbackOn = Exception.class)
     @Override
     public RegisterResponse register(RegisterRequest registerRequest) {
         try {
             validationUtil.validate(registerRequest);
-            Role role = Role.builder()
-                    .roleName(ERole.ROLE_CUSTOMER)
-                    .build();
-            Role roleSaved = roleService.getOrSave(role);
-            System.out.println(roleSaved);
+            Role role = getRole(ERole.ROLE_CUSTOMER);
 
-            UserCredential userCredential = UserCredential.builder()
-                    .email(registerRequest.getEmail())
-                    .password(passwordEncoder.encode(registerRequest.getPassword()))
-                    .role(roleSaved)
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .build();
+            String passwordHashed = passwordEncoder.encode(registerRequest.getPassword());
+            UserCredential userCredential = mapToUserCredentialCustomer(registerRequest,passwordHashed, role);
             userCredentialRepository.saveAndFlush(userCredential);
-            Customer customer = Customer.builder()
-                    .userCredential(userCredential)
-                    .firstName(registerRequest.getFirstName())
-                    .lastName(registerRequest.getLastName())
-                    .birthDate(LocalDate.parse(registerRequest.getBirthDate()))
-                    .phoneNumber(registerRequest.getPhoneNumber())
-                    .isActive(true)
-                    .gender(registerRequest.getGender())
-                    .address(registerRequest.getAddress())
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .build();
+            Customer customer = mapToCustomer(userCredential, registerRequest);
             customerService.createCustomer(customer);
 
-            return RegisterResponse.builder()
-                    .fullName(registerRequest.getFirstName() +" "+registerRequest.getLastName())
-                    .email(userCredential.getEmail())
-                    .phoneNumber(registerRequest.getPhoneNumber())
-                    .role(userCredential.getRole().getRoleName())
-                    .build();
-        }catch (DataIntegrityViolationException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,"User Already Exist");
+            return mapToRegisterCustomer(userCredential, registerRequest);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "User Already Exist");
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An internal server error occurred", e);
         }
     }
 
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
-        validationUtil.validate(loginRequest);
-        System.out.println("2");
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail().toLowerCase(),loginRequest.getPassword()));
-        System.out.println("1");
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        AppUser appUser = (AppUser) authentication.getPrincipal();
-        String token = jwtUtil.generateToken(appUser);
+        try {
+            Authentication authentication = getAuthentication(loginRequest);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            AppUser appUser = (AppUser) authentication.getPrincipal();
+            String token = jwtUtil.generateToken(appUser);
+            Optional<Customer> customerResponse = customerService.getCustomerByUserCredentialId(appUser.getId());
+            return mapToLoginResponse(customerResponse,appUser.getRole(), token);
+        } catch (BadCredentialsException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Invalid email or password", e);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An internal server error occurred", e);
+        }
+    }
 
-        List<CustomerResponse> customerResponse = customerService.getAll();
-        String email = loginRequest.getEmail();
-        String firstName = customerResponse.stream().filter(customerResponse1 -> customerResponse1.getUserCredential().getEmail().equals(email)).toList().get(0).getFirstName();
-        String lastName = customerResponse.stream().filter(customerResponse1 -> customerResponse1.getUserCredential().getEmail().equals(email)).toList().get(0).getLastName();
-        return LoginResponse.builder()
-                .email(email)
-                .firstName(firstName)
-                .lastName(lastName)
-                .token(token)
-                .role(appUser.getRole().name())
-                .build();
+    @Override
+    public LoginAdminResponse loginAdmin(LoginRequest loginRequest) {
+        try {
+            Authentication authentication = getAuthentication(loginRequest);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            AppUser appUser = (AppUser) authentication.getPrincipal();
+            String token = jwtUtil.generateToken(appUser);
+            return mapToLoginAdminsResponse(appUser, token);
+        } catch (BadCredentialsException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Invalid email or password", e);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An internal server error occurred", e);
+        }
+
+    }
+
+    @Override
+    public RegisterResponse registerAdmin(AuthAdminRequest authAdminRequest) {
+        try {
+            Role role = getRole(ERole.ROLE_ADMIN);
+
+            String passwordHashed = getEncryptPassword(authAdminRequest);
+            UserCredential userCredential = mapToUserCredential(authAdminRequest, passwordHashed, role);
+            userCredentialRepository.saveAndFlush(userCredential);
+
+            Admin admin = mapToAdminRequest(authAdminRequest, userCredential);
+            adminService.createSuperAdmin(admin);
+
+            return mapToRegisterResponse(userCredential, authAdminRequest);
+        }catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,  "User admin already exist");
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An internal server error occurred", e);
+        }
     }
 }
