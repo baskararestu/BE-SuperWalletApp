@@ -68,7 +68,7 @@ public class CustomerController {
                         .build());
     }
 
-    @DeleteMapping(value = "{id}")
+    @DeleteMapping(value = "/{id}")
     public ResponseEntity<?> softDeleteCustomer(@PathVariable String id) {
         Boolean customer = customerService.delete(id);
         if (customer) {

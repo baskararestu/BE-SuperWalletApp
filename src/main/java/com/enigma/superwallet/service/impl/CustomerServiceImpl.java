@@ -8,6 +8,7 @@ import com.enigma.superwallet.entity.UserCredential;
 import com.enigma.superwallet.repository.CustomerRepository;
 import com.enigma.superwallet.service.CustomerService;
 import com.enigma.superwallet.service.UserService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -76,6 +77,7 @@ public class CustomerServiceImpl implements CustomerService {
         return null;
     }
 
+    @Transactional(rollbackOn = Exception.class)
     @Override
     public CustomerResponse update(RegisterRequest registerRequest) {
         Customer customer = customerRepository.findById(registerRequest.getId()).orElse(null);
