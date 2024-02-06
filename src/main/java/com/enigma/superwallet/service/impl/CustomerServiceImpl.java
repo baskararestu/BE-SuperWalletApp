@@ -7,7 +7,7 @@ import com.enigma.superwallet.entity.Customer;
 import com.enigma.superwallet.entity.UserCredential;
 import com.enigma.superwallet.repository.CustomerRepository;
 import com.enigma.superwallet.service.CustomerService;
-import com.enigma.superwallet.service.UserService;
+import com.enigma.superwallet.service.UserCredentialService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,7 @@ import java.util.Optional;
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
-    private final UserService userService;
+    private final UserCredentialService userService;
     private final PasswordEncoder passwordEncoder;
 
 
