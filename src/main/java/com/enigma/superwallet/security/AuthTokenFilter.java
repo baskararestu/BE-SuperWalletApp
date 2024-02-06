@@ -1,6 +1,5 @@
 package com.enigma.superwallet.security;
 
-
 import com.enigma.superwallet.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -19,32 +18,28 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-public class AuthTokenFilter extends OncePerRequestFilter {    //eksekusi validasi token dan auth ke springnya
+public class AuthTokenFilter extends OncePerRequestFilter {
+
     private final JwtUtil jwtUtil;
     private final UserService userService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
-            String headerAuth=request.getHeader("Authorization");
+            String headerAuth = request.getHeader("Authorization");
             String token = null;
-            if(headerAuth != null && headerAuth.startsWith("Bearer ")){
-                token = headerAuth.substring(7);
-            }
-            if(token != null && jwtUtil.verifyJwtToken(token)){
-                Map<String,String> userInfo =jwtUtil.getUserInfoByToken(token);
+            if (headerAuth != null && headerAuth.startsWith("Bearer ")) token = headerAuth.substring(7);
+            if (token != null && jwtUtil.verifyJwtToken(token)) {
+                Map<String, String> userInfo = jwtUtil.getUserInfoByToken(token);
                 UserDetails user = userService.loadUserByUserId(userInfo.get("userId"));
-
-                UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken (user,null,user.getAuthorities());
-
+                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource());
-
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             }
-        } catch (Exception e) {
-            e.getMessage();
         }
-        filterChain.doFilter(request,response);
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        filterChain.doFilter(request, response);
     }
 }

@@ -3,7 +3,10 @@ package com.enigma.superwallet.controllers;
 
 import com.enigma.superwallet.constant.AppPath;
 import com.enigma.superwallet.dto.request.AuthAdminRequest;
+import com.enigma.superwallet.dto.request.LoginRequest;
+import com.enigma.superwallet.dto.request.RegisterRequest;
 import com.enigma.superwallet.dto.response.DefaultResponse;
+import com.enigma.superwallet.dto.response.LoginResponse;
 import com.enigma.superwallet.dto.response.RegisterResponse;
 import com.enigma.superwallet.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -39,4 +42,14 @@ public class AuthController {
                             .build());
         }
     }
+    @PostMapping("/register")
+    public RegisterResponse response(@RequestBody RegisterRequest registerRequest) {
+        return authService.register(registerRequest);
+    }
+
+    @PostMapping("/login")
+    public LoginResponse login(@RequestBody LoginRequest loginRequest) {
+        return authService.login(loginRequest);
+    }
+
 }

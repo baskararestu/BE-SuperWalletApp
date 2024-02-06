@@ -37,4 +37,10 @@ public class UserServiceImpl implements UserService {
                 .role(userCredential.getRole().getRoleName())
                 .build();
     }
+    @Override
+    public UserCredential updateUserCredential(UserCredential userCredential) {
+        String userId = userCredential.getId();
+        if (userId != null && loadUserByUserId(userId) != null) return userCredentialRepository.save(userCredential);
+        return null;
+    }
 }

@@ -38,8 +38,12 @@ public class Customer {
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Gender gender;
+
+    @Column(nullable = false)
+    private String address;
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
