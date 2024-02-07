@@ -1,4 +1,4 @@
-package com.enigma.superwallet.controller;
+package com.enigma.superwallet.controllers;
 
 import com.enigma.superwallet.constant.AppPath;
 import com.enigma.superwallet.dto.request.ProfilePictureRequest;

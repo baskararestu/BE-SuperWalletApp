@@ -1,9 +1,10 @@
 package com.enigma.superwallet.service.impl;
 
+import com.enigma.superwallet.constant.ERole;
 import com.enigma.superwallet.entity.AppUser;
 import com.enigma.superwallet.entity.UserCredential;
 import com.enigma.superwallet.repository.UserCredentialRepository;
-import com.enigma.superwallet.service.UserService;
+import com.enigma.superwallet.service.UserCredentialService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -11,8 +12,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl implements UserService {
-
+public class UserCredentialServiceImpl implements UserCredentialService {
     private final UserCredentialRepository userCredentialRepository;
 
     @Override
@@ -43,5 +43,10 @@ public class UserServiceImpl implements UserService {
         String userId = userCredential.getId();
         if (userId != null && loadUserByUserId(userId) != null) return userCredentialRepository.save(userCredential);
         return null;
+    }
+
+    @Override
+    public boolean isSuperAdminExists(ERole roleName) {
+        return userCredentialRepository.existsByRole_RoleName(roleName);
     }
 }

@@ -8,13 +8,9 @@ import com.enigma.superwallet.dto.response.LoginAdminResponse;
 import com.enigma.superwallet.dto.response.LoginResponse;
 import com.enigma.superwallet.dto.response.RegisterResponse;
 import com.enigma.superwallet.entity.*;
-import com.enigma.superwallet.repository.RoleRepository;
 import com.enigma.superwallet.repository.UserCredentialRepository;
 import com.enigma.superwallet.security.JwtUtil;
-import com.enigma.superwallet.service.AdminService;
-import com.enigma.superwallet.service.AuthService;
-import com.enigma.superwallet.service.CustomerService;
-import com.enigma.superwallet.service.RoleService;
+import com.enigma.superwallet.service.*;
 import com.enigma.superwallet.util.ValidationUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +36,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final UserCredentialRepository userCredentialRepository;
-    private final RoleRepository roleRepository;
+    private final UserCredentialService userCredentialService;
     private final AdminService adminService;
     private final RoleService roleService;
     private final CustomerService customerService;
@@ -70,11 +66,12 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public RegisterResponse registerSuperAdmin(AuthAdminRequest authAdminRequest) {
         try {
-            Optional<Role> superAdminRole = roleRepository.findByRoleName(ERole.ROLE_SUPER_ADMIN);
-            if (superAdminRole.isPresent()) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Super admin already exists");
-            }
             Role role = getRole(ERole.ROLE_SUPER_ADMIN);
+
+            if (userCredentialService.isSuperAdminExists(role.getRoleName())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "user admin already exist");
+            }
+
             String passwordHashed = getEncryptPassword(authAdminRequest);
 
             UserCredential userCredential = mapToUserCredential(authAdminRequest, passwordHashed, role);
@@ -84,8 +81,10 @@ public class AuthServiceImpl implements AuthService {
             adminService.createSuperAdmin(admin);
             return mapToRegisterResponse(userCredential, authAdminRequest);
 
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "user admin already exist");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An internal server error occurred", e);
         }
     }
 
@@ -97,7 +96,7 @@ public class AuthServiceImpl implements AuthService {
             Role role = getRole(ERole.ROLE_CUSTOMER);
 
             String passwordHashed = passwordEncoder.encode(registerRequest.getPassword());
-            UserCredential userCredential = mapToUserCredentialCustomer(registerRequest,passwordHashed, role);
+            UserCredential userCredential = mapToUserCredentialCustomer(registerRequest, passwordHashed, role);
             userCredentialRepository.saveAndFlush(userCredential);
             Customer customer = mapToCustomer(userCredential, registerRequest);
             customerService.createCustomer(customer);
@@ -118,7 +117,7 @@ public class AuthServiceImpl implements AuthService {
             AppUser appUser = (AppUser) authentication.getPrincipal();
             String token = jwtUtil.generateToken(appUser);
             Optional<Customer> customerResponse = customerService.getCustomerByUserCredentialId(appUser.getId());
-            return mapToLoginResponse(customerResponse,appUser.getRole(), token);
+            return mapToLoginResponse(customerResponse, appUser.getRole(), token);
         } catch (BadCredentialsException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Invalid email or password", e);
         } catch (Exception e) {
@@ -155,8 +154,8 @@ public class AuthServiceImpl implements AuthService {
             adminService.createSuperAdmin(admin);
 
             return mapToRegisterResponse(userCredential, authAdminRequest);
-        }catch (DataIntegrityViolationException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,  "User admin already exist");
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "User admin already exist");
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An internal server error occurred", e);
         }
