@@ -110,4 +110,10 @@ public class AccountServiceImpl implements AccountService {
         }
         return null;
     }
+
+    @Override
+    public AccountResponse createDefaultAccount(AccountRequest accountRequest) {
+
+        return null;
+    }
 }

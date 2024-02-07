@@ -11,6 +11,5 @@ import lombok.NoArgsConstructor;
 @Builder(toBuilder = true)
 public class AccountRequest {
     private String customerId;
-    private String accountNumber;
     private String pin;
 }
