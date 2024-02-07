@@ -7,7 +7,7 @@ import com.enigma.superwallet.entity.Customer;
 import com.enigma.superwallet.entity.UserCredential;
 import com.enigma.superwallet.repository.CustomerRepository;
 import com.enigma.superwallet.service.CustomerService;
-import com.enigma.superwallet.service.UserService;
+import com.enigma.superwallet.service.UserCredentialService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,9 +23,8 @@ import java.util.Optional;
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
-    private final UserCredentialService userService;
+    private final UserCredentialService userCredentialService;
     private final PasswordEncoder passwordEncoder;
-
 
     @Override
     public CustomerResponse createCustomer(Customer customer) {
@@ -91,7 +90,7 @@ public class CustomerServiceImpl implements CustomerService {
                     .password(passwordEncoder.encode(registerRequest.getPassword()))
                     .role(customer.getUserCredential().getRole())
                     .build();
-            userService.updateUserCredential(userCredential);
+            userCredentialService.updateUserCredential(userCredential);
             Customer updatedCustomer = Customer.builder()
                     .id(registerRequest.getId())
                     .createdAt(customer.getCreatedAt())

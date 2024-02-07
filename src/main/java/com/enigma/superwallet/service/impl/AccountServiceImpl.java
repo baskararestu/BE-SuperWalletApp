@@ -36,7 +36,6 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public AccountResponse createAccount(AccountRequest accountRequest) {
         System.out.println(accountRequest);
-        if (accountRequest.getPin().length() < 6) return null;
         try {
             ECurrencyCode defaultCode = ECurrencyCode.IDR;
 
@@ -70,7 +69,6 @@ public class AccountServiceImpl implements AccountService {
                     .updatedAt(LocalDateTime.now())
                     .currency(currency)
                     .accountNumber(String.valueOf(defaultNum) + String.valueOf(random))
-                    .pin(passwordEncoder.encode(accountRequest.getPin()))
                     .balance(0d)
                     .customer(customer)
                     .build();
@@ -112,8 +110,52 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public AccountResponse createDefaultAccount(AccountRequest accountRequest) {
+    @Transactional
+    public AccountResponse createDefaultAccount(String customerId) {
+        try {
+            ECurrencyCode defaultCode = ECurrencyCode.IDR;
+            Currency currency = Currency.builder()
+                    .code(defaultCode)
+                    .name(defaultCode.currencyName)
+                    .build();
+            currency = currencyService.getOrSaveCurrency(currency);
 
-        return null;
+            int defaultNum = 100;
+            int min = 1000000;
+            int max = 9999999;
+            int random =  min + (int)(Math.random() * ((max - min) + 1));
+
+            CustomerResponse customerResponse = customerService.getById(customerId);
+            Customer customer = Customer.builder()
+                    .id(customerResponse.getId())
+                    .firstName(customerResponse.getFirstName())
+                    .lastName(customerResponse.getLastName())
+                    .phoneNumber(customerResponse.getPhoneNumber())
+                    .birthDate(customerResponse.getBirthDate())
+                    .gender(customerResponse.getGender())
+                    .address(customerResponse.getAddress())
+                    .userCredential(UserCredential.builder()
+                            .email(customerResponse.getUserCredential().getEmail())
+                            .build())
+                    .build();
+
+            Account account = Account.builder()
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .currency(currency)
+                    .accountNumber(String.valueOf(defaultNum) + random)
+                    .balance(0d)
+                    .customer(customer)
+                    .build();
+            accountRepository.save(account);
+            return AccountResponse.builder()
+                    .firstName(account.getCustomer().getFirstName())
+                    .accountNumber(account.getAccountNumber())
+                    .currency(account.getCurrency())
+                    .balance(account.getBalance())
+                    .build();
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Account Creation Failed");
+        }
     }
 }

@@ -48,6 +48,9 @@ public class Customer {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 
+    @Column
+    private String pin;
+
     @OneToOne
     @JoinColumn(name = "profile_picture_id")
     private ProfilePicture profilePicture;

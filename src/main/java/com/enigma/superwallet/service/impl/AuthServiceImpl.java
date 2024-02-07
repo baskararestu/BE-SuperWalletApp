@@ -44,6 +44,7 @@ public class AuthServiceImpl implements AuthService {
     private final ValidationUtil validationUtil;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final AccountService accountService;
 
     private Authentication getAuthentication(LoginRequest loginRequest) {
         validationUtil.validate(loginRequest);
@@ -100,7 +101,7 @@ public class AuthServiceImpl implements AuthService {
             userCredentialRepository.saveAndFlush(userCredential);
             Customer customer = mapToCustomer(userCredential, registerRequest);
             customerService.createCustomer(customer);
-
+            accountService.createDefaultAccount(customer.getId());
             return mapToRegisterCustomer(userCredential, registerRequest);
         } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "User Already Exist");
