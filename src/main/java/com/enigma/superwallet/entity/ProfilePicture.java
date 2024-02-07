@@ -23,6 +23,7 @@ public class ProfilePicture {
     @Column(name = "uploaded_at")
     private LocalDateTime uploadedAt;
 
+
     @Override
     public String toString() {
         return "ProfilePicture{" +
