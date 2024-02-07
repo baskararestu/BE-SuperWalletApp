@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -24,11 +25,16 @@ public class Account {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+//    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+//    @JoinTable(name = "m_account_currency",
+//            joinColumns = {@JoinColumn(name = "account_id")},
+//            inverseJoinColumns = {@JoinColumn(name = "currency_id")})
+    @ManyToOne
+    @JoinColumn(name = "currency_id")
+    private Currency currency;
+
     @Column(name = "account_number", nullable = false, unique = true)
     private String accountNumber;
-
-    @Column(name = "currency_code", nullable = false)
-    private String currencyCode;
 
     @Column(nullable = false)
     private String pin;

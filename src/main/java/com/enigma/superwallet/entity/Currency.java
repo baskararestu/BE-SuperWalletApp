@@ -1,6 +1,6 @@
 package com.enigma.superwallet.entity;
 
-import com.enigma.superwallet.constant.ETransactionType;
+import com.enigma.superwallet.constant.ECurrencyCode;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,15 +10,18 @@ import lombok.*;
 @Setter
 @Builder(toBuilder = true)
 @Entity
-@Table(name = "m_transaction_type")
-public class TransactionType {
+@Table(name = "m_currency")
+public class Currency {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "transaction_type")
-    private ETransactionType transactionType;
+    @Column(nullable = false)
+    private ECurrencyCode code;
 
+    @Column(nullable = false)
+    private String name;
+    
 }

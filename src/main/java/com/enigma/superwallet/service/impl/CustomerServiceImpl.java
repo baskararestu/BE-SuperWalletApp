@@ -8,6 +8,7 @@ import com.enigma.superwallet.entity.UserCredential;
 import com.enigma.superwallet.repository.CustomerRepository;
 import com.enigma.superwallet.service.CustomerService;
 import com.enigma.superwallet.service.UserService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -47,6 +48,7 @@ public class CustomerServiceImpl implements CustomerService {
                         .phoneNumber(customer.getPhoneNumber())
                         .birthDate(customer.getBirthDate())
                         .gender(customer.getGender())
+                        .address(customer.getAddress())
                         .userCredential(UserCredentialResponse.builder()
                                 .email(customer.getUserCredential().getEmail())
                                 .role(customer.getUserCredential().getRole().getRoleName())
@@ -65,6 +67,7 @@ public class CustomerServiceImpl implements CustomerService {
                     .lastName(customer.getLastName())
                     .phoneNumber(customer.getPhoneNumber())
                     .birthDate(customer.getBirthDate())
+                    .address(customer.getAddress())
                     .gender(customer.getGender())
                     .userCredential(UserCredentialResponse.builder()
                             .email(customer.getUserCredential().getEmail())
@@ -75,6 +78,7 @@ public class CustomerServiceImpl implements CustomerService {
         return null;
     }
 
+    @Transactional(rollbackOn = Exception.class)
     @Override
     public CustomerResponse update(RegisterRequest registerRequest) {
         Customer customer = customerRepository.findById(registerRequest.getId()).orElse(null);
@@ -97,6 +101,7 @@ public class CustomerServiceImpl implements CustomerService {
                     .phoneNumber(registerRequest.getPhoneNumber())
                     .birthDate(LocalDate.parse(registerRequest.getBirthDate()))
                     .gender(registerRequest.getGender())
+                    .address(registerRequest.getAddress())
                     .isActive(customer.getIsActive())
                     .userCredential(userCredential)
                     .build();
@@ -108,6 +113,7 @@ public class CustomerServiceImpl implements CustomerService {
                     .phoneNumber(updatedCustomer.getPhoneNumber())
                     .birthDate(updatedCustomer.getBirthDate())
                     .gender(updatedCustomer.getGender())
+                    .address(updatedCustomer.getAddress())
                     .userCredential(UserCredentialResponse.builder()
                             .email(userCredential.getEmail())
                             .role(userCredential.getRole().getRoleName())
@@ -130,6 +136,7 @@ public class CustomerServiceImpl implements CustomerService {
                     .phoneNumber(customer.getPhoneNumber())
                     .birthDate(customer.getBirthDate())
                     .gender(customer.getGender())
+                    .address(customer.getAddress())
                     .isActive(false)
                     .userCredential(customer.getUserCredential())
                     .build();
