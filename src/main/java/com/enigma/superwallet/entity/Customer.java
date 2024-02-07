@@ -49,6 +49,10 @@ public class Customer {
     private Boolean isActive;
 
     @OneToOne
+    @JoinColumn(name = "profile_picture_id")
+    private ProfilePicture profilePicture;
+
+    @OneToOne
     @JoinColumn(name = "user_id")
     private UserCredential userCredential;
 
