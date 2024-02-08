@@ -22,6 +22,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.enigma.superwallet.util.ValidationCurrencyCode.isValidCurrencyCode;
+
 @Service
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
@@ -37,7 +39,11 @@ public class AccountServiceImpl implements AccountService {
     public AccountResponse createAccount(AccountRequest accountRequest) {
         System.out.println(accountRequest);
         try {
-            ECurrencyCode defaultCode = ECurrencyCode.IDR;
+            if (!isValidCurrencyCode(accountRequest.getCurrencyCode())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid currency code");
+            }
+
+            ECurrencyCode defaultCode = ECurrencyCode.valueOf(accountRequest.getCurrencyCode());
 
             Currency currency = Currency.builder()
                     .code(defaultCode)
