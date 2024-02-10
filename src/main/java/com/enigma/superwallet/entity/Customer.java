@@ -51,6 +51,10 @@ public class Customer {
     @Column
     private String pin;
 
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "dummy_bank_id")
+    private DummyBank dummyBank;
+
     @OneToOne
     @JoinColumn(name = "profile_picture_id")
     private ProfilePicture profilePicture;

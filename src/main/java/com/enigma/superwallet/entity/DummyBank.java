@@ -10,15 +10,18 @@ import lombok.*;
 @Setter
 @Builder(toBuilder = true)
 @Entity
-@Table(name = "dummy_bank_account")
+@Table(name = "m_dummy_bank")
 public class DummyBank {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @Column(nullable = false, unique = true)
-    private String accountNumber;
+    private String bankNumber;
+
+    @Column(nullable = false)
+    private String cvv;
 
     @Column(nullable = false)
     private Double balance;
