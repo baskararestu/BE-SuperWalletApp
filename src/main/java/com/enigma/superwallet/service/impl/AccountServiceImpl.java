@@ -21,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static com.enigma.superwallet.util.ValidationCurrencyCode.isValidCurrencyCode;
 
@@ -31,8 +32,6 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
     private final CurrencyService currencyService;
     private final CustomerService customerService;
-    private final PasswordEncoder passwordEncoder;
-
 
     @Transactional(rollbackOn = Exception.class)
     @Override
@@ -164,4 +163,43 @@ public class AccountServiceImpl implements AccountService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Account Creation Failed");
         }
     }
+
+    @Override
+    public AccountResponse findAccountByCustomerIdAndPin(String userId, String pin) {
+        return accountRepository.findAccountByCustomerIdAndPin(userId, pin)
+                .map(account -> AccountResponse.builder()
+                        .firstName(account.getCustomer().getFirstName())
+                        .accountNumber(account.getAccountNumber())
+                        .currency(account.getCurrency())
+                        .balance(account.getBalance())
+                        .build())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found or pin is incorrect"));
+    }
+
+    @Override
+    @Transactional
+    public AccountResponse updateAccountBalance(String accountId, Double newBalance) {
+        try {
+            Optional<Account> optionalAccount = accountRepository.findById(accountId);
+            if (optionalAccount.isPresent()) {
+                Account account = optionalAccount.get();
+
+                account.setBalance(newBalance);
+
+                return AccountResponse.builder()
+                        .firstName(account.getCustomer().getFirstName())
+                        .accountNumber(account.getAccountNumber())
+                        .currency(account.getCurrency())
+                        .balance(account.getBalance())
+                        .build();
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found");
+            }
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update account balance", e);
+        }
+    }
+
 }

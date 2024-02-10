@@ -10,4 +10,6 @@ public interface AccountService {
     List<AccountResponse> getAllAccount();
     AccountResponse getById(String id);
     AccountResponse createDefaultAccount(String customerId);
+    AccountResponse findAccountByCustomerIdAndPin(String userId, String pin);
+    AccountResponse updateAccountBalance(String accountId, Double newBalance);
 }
