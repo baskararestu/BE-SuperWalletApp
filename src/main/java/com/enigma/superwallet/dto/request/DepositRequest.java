@@ -12,7 +12,10 @@ import lombok.NoArgsConstructor;
 @Builder(toBuilder = true)
 public class DepositRequest {
     @NotBlank
-    private String userId;
+    private String customerId;
+
+    @NotBlank
+    private String dummyBankId;
 
     @NotBlank
     private String accountId;

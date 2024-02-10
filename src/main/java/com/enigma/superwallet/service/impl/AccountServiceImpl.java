@@ -53,7 +53,7 @@ public class AccountServiceImpl implements AccountService {
             int defaultNum = 100;
             int min = 1000000;
             int max = 9999999;
-            Integer random =  min + (int)(Math.random() * ((max - min) + 1));
+            Integer random = min + (int) (Math.random() * ((max - min) + 1));
 
             CustomerResponse customerResponse = customerService.getById(accountRequest.getCustomerId());
             Customer customer = Customer.builder()
@@ -128,7 +128,7 @@ public class AccountServiceImpl implements AccountService {
             int defaultNum = 100;
             int min = 1000000;
             int max = 9999999;
-            int random =  min + (int)(Math.random() * ((max - min) + 1));
+            int random = min + (int) (Math.random() * ((max - min) + 1));
 
             CustomerResponse customerResponse = customerService.getById(customerId);
             Customer customer = Customer.builder()
@@ -192,6 +192,34 @@ public class AccountServiceImpl implements AccountService {
                         .currency(account.getCurrency())
                         .balance(account.getBalance())
                         .build();
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found");
+            }
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update account balance", e);
+        }
+    }
+
+    @Override
+    public AccountResponse updateIdrAccountBalance(String accountId, Double newBalance) {
+        try {
+            Optional<Account> optionalAccount = accountRepository.findById(accountId);
+            if (optionalAccount.isPresent()) {
+                Account account = optionalAccount.get();
+                // Check if the account currency is IDR
+                if (account.getCurrency().getCode() == ECurrencyCode.IDR) {
+                    account.setBalance(newBalance);
+                    return AccountResponse.builder()
+                            .firstName(account.getCustomer().getFirstName())
+                            .accountNumber(account.getAccountNumber())
+                            .currency(account.getCurrency())
+                            .balance(account.getBalance())
+                            .build();
+                } else {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account currency is not IDR");
+                }
             } else {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found");
             }

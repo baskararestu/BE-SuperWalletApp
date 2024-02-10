@@ -12,4 +12,5 @@ public interface AccountService {
     AccountResponse createDefaultAccount(String customerId);
     AccountResponse findAccountByCustomerIdAndPin(String userId, String pin);
     AccountResponse updateAccountBalance(String accountId, Double newBalance);
+    AccountResponse updateIdrAccountBalance(String accountId,Double newBalance);
 }

@@ -6,5 +6,6 @@ import com.enigma.superwallet.entity.DummyBank;
 
 public interface DummyBankService {
     DummyBankResponse createDummyBank(DummyBankRequest dummyBankRequest);
-    DummyBankResponse getDummyBank(String accountId);
+    DummyBankResponse getDummyBankById(String id);
+    DummyBankResponse reduceBalance(String id,double amount);
 }

@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class DummyBankServiceImpl implements DummyBankService {
@@ -35,10 +37,12 @@ public class DummyBankServiceImpl implements DummyBankService {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found");
             }
             customerService.updateDummyBankId(customerResponse.getId(), dummyBank.getId());
+            String formattedBalance = String.format("%.2f", dummyBank.getBalance());
+
             return DummyBankResponse.builder()
                     .id(dummyBank.getId())
                     .bankNumber(dummyBank.getBankNumber())
-                    .balance(dummyBank.getBalance())
+                    .balance(formattedBalance)
                     .build();
         } catch (ResponseStatusException e) {
             throw e;
@@ -48,7 +52,51 @@ public class DummyBankServiceImpl implements DummyBankService {
     }
 
     @Override
-    public DummyBankResponse getDummyBank(String accountId) {
-        return null;
+    public DummyBankResponse getDummyBankById(String id) {
+        Optional<DummyBank> optionalDummyBank = dummyBankRepo.findById(id);
+        if (optionalDummyBank.isPresent()) {
+            DummyBank dummyBank = optionalDummyBank.get();
+            String formattedBalance = String.format("%.2f", dummyBank.getBalance());
+            return DummyBankResponse.builder()
+                    .id(dummyBank.getId())
+                    .bankNumber(dummyBank.getBankNumber())
+                    .balance(formattedBalance)
+                    .build();
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Dummy bank not found");
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public DummyBankResponse reduceBalance(String id, double amount) {
+        // Retrieve the DummyBank entity
+        Optional<DummyBank> optionalDummyBank = dummyBankRepo.findById(id);
+        if (optionalDummyBank.isPresent()) {
+            DummyBank dummyBank = optionalDummyBank.get();
+
+            // Check if the balance is sufficient
+            if (dummyBank.getBalance() >= amount) {
+                // Reduce the balance
+                dummyBank.setBalance(dummyBank.getBalance() - amount);
+
+                // Save the updated DummyBank entity
+                dummyBank = dummyBankRepo.save(dummyBank);
+
+                // Format the balance
+                String formattedBalance = String.format("%.2f", dummyBank.getBalance());
+
+                // Return the updated DummyBankResponse
+                return DummyBankResponse.builder()
+                        .id(dummyBank.getId())
+                        .bankNumber(dummyBank.getBankNumber())
+                        .balance(formattedBalance)
+                        .build();
+            } else {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient balance");
+            }
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Dummy bank not found");
+        }
     }
 }
