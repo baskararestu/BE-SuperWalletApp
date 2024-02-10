@@ -1,6 +1,6 @@
 package com.enigma.superwallet.dto.response;
 
-import com.enigma.superwallet.entity.Currency;
+import com.enigma.superwallet.constant.ECurrencyCode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,11 +10,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)
-public class AccountResponse {
-    private String id;
-    private String firstName;
-    private String lastName;
+public class DepositResponse {
+    private String transactionId;
+    private String customerName;
+    private String amount;
+    private ECurrencyCode currency;
     private String accountNumber;
-    private Currency currency;
-    private Double balance;
+    private String newBalance;
 }

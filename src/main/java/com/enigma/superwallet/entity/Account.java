@@ -36,7 +36,7 @@ public class Account {
     @Column(name = "account_number", nullable = false, unique = true)
     private String accountNumber;
 
-    @Column(nullable = false)
+    @Column
     private String pin;
 
     @Column(columnDefinition =  "DOUBLE PRECISION CHECK (balance >= 0)")

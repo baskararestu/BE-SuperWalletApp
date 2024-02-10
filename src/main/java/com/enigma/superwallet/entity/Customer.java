@@ -48,6 +48,13 @@ public class Customer {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 
+    @Column
+    private String pin;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "dummy_bank_id")
+    private DummyBank dummyBank;
+
     @OneToOne
     @JoinColumn(name = "profile_picture_id")
     private ProfilePicture profilePicture;

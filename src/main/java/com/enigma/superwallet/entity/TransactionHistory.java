@@ -18,7 +18,6 @@ public class TransactionHistory {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Id
     @Column(name = "transaction_date", nullable = false)
     private LocalDateTime transactionDate;
 

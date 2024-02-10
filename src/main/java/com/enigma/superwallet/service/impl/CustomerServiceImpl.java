@@ -4,10 +4,12 @@ import com.enigma.superwallet.dto.request.RegisterRequest;
 import com.enigma.superwallet.dto.response.CustomerResponse;
 import com.enigma.superwallet.dto.response.UserCredentialResponse;
 import com.enigma.superwallet.entity.Customer;
+import com.enigma.superwallet.entity.DummyBank;
 import com.enigma.superwallet.entity.UserCredential;
 import com.enigma.superwallet.repository.CustomerRepository;
+import com.enigma.superwallet.repository.DummyBankRepository;
 import com.enigma.superwallet.service.CustomerService;
-import com.enigma.superwallet.service.UserService;
+import com.enigma.superwallet.service.UserCredentialService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,8 +25,9 @@ import java.util.Optional;
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
-    private final UserCredentialService userService;
+    private final UserCredentialService userCredentialService;
     private final PasswordEncoder passwordEncoder;
+    private final DummyBankRepository dummyBankRepository;
 
 
     @Override
@@ -91,7 +94,7 @@ public class CustomerServiceImpl implements CustomerService {
                     .password(passwordEncoder.encode(registerRequest.getPassword()))
                     .role(customer.getUserCredential().getRole())
                     .build();
-            userService.updateUserCredential(userCredential);
+            userCredentialService.updateUserCredential(userCredential);
             Customer updatedCustomer = Customer.builder()
                     .id(registerRequest.getId())
                     .createdAt(customer.getCreatedAt())
@@ -149,5 +152,23 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Optional<Customer> getCustomerByUserCredentialId(String id) {
         return customerRepository.findByUserCredentialId(id);
+    }
+
+    @Transactional
+    @Override
+    public void updateDummyBankId(String customerId, String dummyBankId) {
+        // Fetch customer by ID
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("Customer not found with ID: " + customerId));
+
+        // Fetch dummy bank by ID
+        DummyBank dummyBank = dummyBankRepository.findById(dummyBankId)
+                .orElseThrow(() -> new RuntimeException("Dummy bank not found with ID: " + dummyBankId));
+
+        // Set the dummy bank for the customer
+        customer.setDummyBank(dummyBank);
+
+        // Save the updated customer entity
+        customerRepository.save(customer);
     }
 }

@@ -1,0 +1,11 @@
+package com.enigma.superwallet.service;
+
+import com.enigma.superwallet.dto.request.DummyBankRequest;
+import com.enigma.superwallet.dto.response.DummyBankResponse;
+import com.enigma.superwallet.entity.DummyBank;
+
+public interface DummyBankService {
+    DummyBankResponse createDummyBank(DummyBankRequest dummyBankRequest);
+    DummyBankResponse getDummyBankById(String id);
+    DummyBankResponse reduceBalance(String id,double amount);
+}

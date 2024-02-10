@@ -9,5 +9,8 @@ public interface AccountService {
     AccountResponse createAccount(AccountRequest accountRequest);
     List<AccountResponse> getAllAccount();
     AccountResponse getById(String id);
-    AccountResponse createDefaultAccount(AccountRequest accountRequest);
+    AccountResponse createDefaultAccount(String customerId);
+    AccountResponse findAccountByCustomerIdAndPin(String userId, String pin);
+    AccountResponse updateAccountBalance(String accountId, Double newBalance);
+    AccountResponse updateIdrAccountBalance(String accountId,Double newBalance);
 }

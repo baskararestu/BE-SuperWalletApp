@@ -14,4 +14,5 @@ public interface CustomerService {
     CustomerResponse update(RegisterRequest registerRequest);
     Boolean delete(String id);
     Optional<Customer> getCustomerByUserCredentialId (String userCredentialId);
+    void updateDummyBankId(String customerId, String dummyBankId);
 }

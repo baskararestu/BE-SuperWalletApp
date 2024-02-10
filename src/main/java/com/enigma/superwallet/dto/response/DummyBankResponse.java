@@ -1,4 +1,4 @@
-package com.enigma.superwallet.dto.request;
+package com.enigma.superwallet.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)
-public class AccountRequest {
-    private String customerId;
-    private String currencyCode;
+public class DummyBankResponse {
+    private String id;
+    private String bankNumber;
+    private String balance;
 }
