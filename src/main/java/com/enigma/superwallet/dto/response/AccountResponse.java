@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder(toBuilder = true)
 public class AccountResponse {
+    private String id;
     private String firstName;
     private String accountNumber;
     private Currency currency;

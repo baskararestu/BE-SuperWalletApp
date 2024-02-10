@@ -105,6 +105,7 @@ public class AccountServiceImpl implements AccountService {
         Account account = accountRepository.findById(id).orElse(null);
         if (account != null) {
             return AccountResponse.builder()
+                    .id(account.getId())
                     .firstName(account.getCustomer().getFirstName())
                     .accountNumber(account.getAccountNumber())
                     .currency(account.getCurrency())
@@ -208,9 +209,10 @@ public class AccountServiceImpl implements AccountService {
             Optional<Account> optionalAccount = accountRepository.findById(accountId);
             if (optionalAccount.isPresent()) {
                 Account account = optionalAccount.get();
-                // Check if the account currency is IDR
                 if (account.getCurrency().getCode() == ECurrencyCode.IDR) {
-                    account.setBalance(newBalance);
+                    Double oldBalance = account.getBalance();
+                    Double updatedBalance = oldBalance + newBalance;
+                    account.setBalance(updatedBalance);
                     return AccountResponse.builder()
                             .firstName(account.getCustomer().getFirstName())
                             .accountNumber(account.getAccountNumber())
@@ -229,5 +231,6 @@ public class AccountServiceImpl implements AccountService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update account balance", e);
         }
     }
+
 
 }

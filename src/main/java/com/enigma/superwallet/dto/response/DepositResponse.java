@@ -13,8 +13,8 @@ import lombok.NoArgsConstructor;
 public class DepositResponse {
     private String transactionId;
     private String customerId;
-    private Double amount;
+    private String amount;
     private ECurrencyCode currency;
     private String accountId;
-    private Double newBalance;
+    private String newBalance;
 }
