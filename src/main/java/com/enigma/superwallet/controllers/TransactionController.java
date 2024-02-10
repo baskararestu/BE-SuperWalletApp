@@ -2,6 +2,7 @@ package com.enigma.superwallet.controllers;
 
 import com.enigma.superwallet.constant.AppPath;
 import com.enigma.superwallet.dto.request.DepositRequest;
+import com.enigma.superwallet.dto.response.DefaultResponse;
 import com.enigma.superwallet.dto.response.DepositResponse;
 import com.enigma.superwallet.service.TransactionsService;
 import lombok.RequiredArgsConstructor;
@@ -20,14 +21,21 @@ public class TransactionController {
     private final TransactionsService transactionsService;
 
     @PostMapping
-    public ResponseEntity<DepositResponse> deposit(@RequestBody DepositRequest depositRequest) {
+    public ResponseEntity<?> deposit(@RequestBody DepositRequest depositRequest) {
         try {
             DepositResponse response = transactionsService.deposit(depositRequest);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(DefaultResponse.builder()
+                            .statusCode(HttpStatus.OK.value())
+                            .message("Successfully added balance to account")
+                            .data(response)
+                            .build());
         } catch (ResponseStatusException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An internal server error occurred", e);
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(DefaultResponse.builder()
+                            .statusCode(e.getStatusCode().value())
+                            .message(e.getReason())
+                            .build());
         }
     }
 }

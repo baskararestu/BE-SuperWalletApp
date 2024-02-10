@@ -69,10 +69,11 @@ public class TransactionServiceImpl implements TransactionsService {
             String formattedNewBalance = formatAmount(account.getBalance());
 
             return DepositResponse.builder()
-                    .customerId(depositRequest.getCustomerId())
+                    .transactionId(transactionHistory.getId())
+                    .customerName(account.getFirstName()+" "+account.getLastName())
                     .amount(formattedAmount)
                     .currency(ECurrencyCode.IDR)
-                    .accountId(depositRequest.getAccountId())
+                    .accountNumber(account.getAccountNumber())
                     .newBalance(formattedNewBalance)
                     .build();
         } catch (ResponseStatusException e) {

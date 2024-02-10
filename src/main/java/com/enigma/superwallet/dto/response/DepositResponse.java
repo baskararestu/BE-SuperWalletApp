@@ -12,9 +12,9 @@ import lombok.NoArgsConstructor;
 @Builder(toBuilder = true)
 public class DepositResponse {
     private String transactionId;
-    private String customerId;
+    private String customerName;
     private String amount;
     private ECurrencyCode currency;
-    private String accountId;
+    private String accountNumber;
     private String newBalance;
 }

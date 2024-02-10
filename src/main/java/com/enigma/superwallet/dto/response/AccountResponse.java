@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class AccountResponse {
     private String id;
     private String firstName;
+    private String lastName;
     private String accountNumber;
     private Currency currency;
     private Double balance;

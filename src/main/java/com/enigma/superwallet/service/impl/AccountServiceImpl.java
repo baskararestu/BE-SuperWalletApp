@@ -80,6 +80,7 @@ public class AccountServiceImpl implements AccountService {
             accountRepository.save(account);
             return AccountResponse.builder()
                     .firstName(account.getCustomer().getFirstName())
+                    .lastName(account.getCustomer().getLastName())
                     .accountNumber(account.getAccountNumber())
                     .currency(account.getCurrency())
                     .balance(account.getBalance())
@@ -94,6 +95,7 @@ public class AccountServiceImpl implements AccountService {
         return accountRepository.findAll().stream().map(account -> AccountResponse
                 .builder()
                 .firstName(account.getCustomer().getFirstName())
+                .lastName(account.getCustomer().getLastName())
                 .accountNumber(account.getAccountNumber())
                 .balance(account.getBalance())
                 .currency(account.getCurrency())
@@ -107,6 +109,7 @@ public class AccountServiceImpl implements AccountService {
             return AccountResponse.builder()
                     .id(account.getId())
                     .firstName(account.getCustomer().getFirstName())
+                    .lastName(account.getCustomer().getLastName())
                     .accountNumber(account.getAccountNumber())
                     .currency(account.getCurrency())
                     .balance(account.getBalance())
@@ -156,6 +159,7 @@ public class AccountServiceImpl implements AccountService {
             accountRepository.save(account);
             return AccountResponse.builder()
                     .firstName(account.getCustomer().getFirstName())
+                    .lastName(account.getCustomer().getLastName())
                     .accountNumber(account.getAccountNumber())
                     .currency(account.getCurrency())
                     .balance(account.getBalance())
@@ -170,6 +174,7 @@ public class AccountServiceImpl implements AccountService {
         return accountRepository.findAccountByCustomerIdAndPin(userId, pin)
                 .map(account -> AccountResponse.builder()
                         .firstName(account.getCustomer().getFirstName())
+                        .lastName(account.getCustomer().getLastName())
                         .accountNumber(account.getAccountNumber())
                         .currency(account.getCurrency())
                         .balance(account.getBalance())
@@ -189,6 +194,7 @@ public class AccountServiceImpl implements AccountService {
 
                 return AccountResponse.builder()
                         .firstName(account.getCustomer().getFirstName())
+                        .lastName(account.getCustomer().getLastName())
                         .accountNumber(account.getAccountNumber())
                         .currency(account.getCurrency())
                         .balance(account.getBalance())
@@ -215,6 +221,7 @@ public class AccountServiceImpl implements AccountService {
                     account.setBalance(updatedBalance);
                     return AccountResponse.builder()
                             .firstName(account.getCustomer().getFirstName())
+                            .lastName(account.getCustomer().getLastName())
                             .accountNumber(account.getAccountNumber())
                             .currency(account.getCurrency())
                             .balance(account.getBalance())
