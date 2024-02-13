@@ -48,7 +48,12 @@ public class AccountServiceImpl implements AccountService {
                     .code(defaultCode)
                     .name(defaultCode.currencyName)
                     .build();
-            currency = currencyService.getOrSaveCurrency(currency);
+
+            Optional<Currency> optionalCurrency = currencyService.getOrSaveCurrency(currency);
+            if (optionalCurrency.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to get or save currency");
+            }
+            currency = optionalCurrency.get();
 
             int defaultNum = 100;
             int min = 1000000;
@@ -127,8 +132,11 @@ public class AccountServiceImpl implements AccountService {
                     .code(defaultCode)
                     .name(defaultCode.currencyName)
                     .build();
-            currency = currencyService.getOrSaveCurrency(currency);
-
+            Optional<Currency> optionalCurrency = currencyService.getOrSaveCurrency(currency);
+            if (optionalCurrency.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to get or save currency");
+            }
+            currency = optionalCurrency.get();
             int defaultNum = 100;
             int min = 1000000;
             int max = 9999999;

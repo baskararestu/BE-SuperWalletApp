@@ -9,7 +9,7 @@ public enum ECurrencyCode {
     SGD("Singapore Dollar"),
     AUD("Australian Dollar"),
     KRW("Korean Won"),
-    SAR("Saudi Arabian Riyal"),
+    MYR("Malaysian Ringgit"),
     GBP("Great Britain Pound Sterling");
 
     public final String currencyName;
