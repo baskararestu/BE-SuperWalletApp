@@ -1,37 +1,43 @@
 package com.enigma.superwallet.controllers;
 
-import com.enigma.superwallet.entity.CurrencyHistory;
+import com.enigma.superwallet.constant.AppPath;
+import com.enigma.superwallet.dto.response.CurrencyHistoryResponse;
+import com.enigma.superwallet.dto.response.DefaultResponse;
 import com.enigma.superwallet.service.CurrencyHistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping(AppPath.CURRENCY)
 public class CurrencyHistoryController {
     private final CurrencyHistoryService currencyHistoryService;
-
-    @PostMapping("/api/currency/save")
-    public ResponseEntity<String> saveCurrencyHistory(
-            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam("baseCurrency") String baseCurrency,
-            @RequestParam("targetCurrencies") String targetCurrencies
-    ) {
-        currencyHistoryService.saveCurrencyHistory(date.toString(), baseCurrency, targetCurrencies);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Currency history saved successfully");
-    }
-
-    @PostMapping("/api/currency/get")
-    public ResponseEntity<List<CurrencyHistory>> getCurrencyHistory(
+    @PostMapping
+    public ResponseEntity<?> getCurrencyHistory(
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam("baseCurrency") String baseCurrency
     ) {
-        List<CurrencyHistory> currencyHistoryList = currencyHistoryService.getCurrencyHistoryByDateAndBaseCurrency(date.toString(), baseCurrency);
-        return ResponseEntity.ok(currencyHistoryList);
+        try {
+
+            List<CurrencyHistoryResponse> currencyHistoryList = currencyHistoryService.getCurrencyHistoryByDateAndBaseCurrency(date.toString(), baseCurrency);
+            return ResponseEntity.status(HttpStatus.OK).body(DefaultResponse.builder()
+                    .message("Success get history currency rate")
+                    .statusCode(HttpStatus.OK.value())
+                    .data(currencyHistoryList)
+                    .build());
+        }catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(DefaultResponse.builder()
+                            .statusCode(e.getStatusCode().value())
+                            .message(e.getReason())
+                            .build());
+        }
     }
 }

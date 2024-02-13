@@ -1,6 +1,7 @@
 package com.enigma.superwallet.service.impl;
 
 import com.enigma.superwallet.constant.ECurrencyCode;
+import com.enigma.superwallet.dto.response.CurrencyHistoryResponse;
 import com.enigma.superwallet.entity.Currency;
 import com.enigma.superwallet.entity.CurrencyHistory;
 import com.enigma.superwallet.entity.ExchangeRatesJson;
@@ -14,10 +15,13 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,8 +34,10 @@ public class CurrencyHistoryServiceImpl implements CurrencyHistoryService {
     private String apiUrl;
 
     @Override
-    public void saveCurrencyHistory(String date, String baseCurrency, String targetCurrencies) {
+    public void saveCurrencyHistory(String date, String baseCurrency) {
         LocalDate localDate = LocalDate.parse(date);
+        Timestamp timestamp = Timestamp.valueOf(localDate.atTime(LocalTime.MIDNIGHT));
+        Long time = timestamp.getTime();
 
         String url = String.format("%s/history/%s/%d/%d/%d",
                 apiUrl, baseCurrency, localDate.getYear(), localDate.getMonthValue(), localDate.getDayOfMonth());
@@ -63,7 +69,7 @@ public class CurrencyHistoryServiceImpl implements CurrencyHistoryService {
                     });
 
             CurrencyHistory existingCurrencyHistory = currencyHistoryRepository
-                    .findFirstByDateAndBaseAndCurrency(localDate, baseCurrency, currency);
+                    .findFirstByDateAndBaseAndCurrency(time, baseCurrency, currency);
 
             if (existingCurrencyHistory != null) {
                 if (baseCurrency.equals(currencyCode.name())) {
@@ -72,7 +78,7 @@ public class CurrencyHistoryServiceImpl implements CurrencyHistoryService {
                 }
             } else {
                 CurrencyHistory currencyHistory = new CurrencyHistory();
-                currencyHistory.setDate(localDate);
+                currencyHistory.setDate(time);
                 currencyHistory.setBase(baseCurrency);
                 currencyHistory.setCurrency(currency);
                 currencyHistory.setRate(conversionRates.get(currencyCode.name()));
@@ -82,18 +88,20 @@ public class CurrencyHistoryServiceImpl implements CurrencyHistoryService {
         }
     }
     @Override
-    public List<CurrencyHistory> getCurrencyHistoryByDateAndBaseCurrency(String date, String baseCurrency) {
+    public List<CurrencyHistoryResponse> getCurrencyHistoryByDateAndBaseCurrency(String date, String baseCurrency) {
         LocalDate localDate = LocalDate.parse(date);
+        Timestamp timestamp = Timestamp.valueOf(localDate.atTime(LocalTime.MIDNIGHT));
+        Long time = timestamp.getTime();
 
-        // Check if currency history exists for the given date and base currency
-        List<CurrencyHistory> currencyHistoryList = currencyHistoryRepository.findByDateAndBase(localDate, baseCurrency);
+        List<CurrencyHistory> currencyHistoryList = currencyHistoryRepository.findByDateAndBase(time, baseCurrency);
 
-        // If currency history does not exist, fetch and save it from the API
         if (currencyHistoryList.isEmpty()) {
-            saveCurrencyHistory(date, baseCurrency, ""); // Assuming empty string for target currencies
-            currencyHistoryList = currencyHistoryRepository.findByDateAndBase(localDate, baseCurrency);
+            saveCurrencyHistory(date, baseCurrency);
+            currencyHistoryList = currencyHistoryRepository.findByDateAndBase(time, baseCurrency);
         }
 
-        return currencyHistoryList;
+        return currencyHistoryList.stream()
+                .map(CurrencyHistoryResponse::new)
+                .collect(Collectors.toList());
     }
 }

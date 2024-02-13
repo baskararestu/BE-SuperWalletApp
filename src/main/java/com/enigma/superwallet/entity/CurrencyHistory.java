@@ -20,7 +20,7 @@ public class CurrencyHistory {
     private String id;
 
     @Column
-    private LocalDate date;
+    private Long date;
 
     @Column
     private String base;
