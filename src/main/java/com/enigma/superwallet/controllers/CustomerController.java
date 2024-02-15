@@ -1,6 +1,8 @@
 package com.enigma.superwallet.controllers;
 
 import com.enigma.superwallet.constant.AppPath;
+import com.enigma.superwallet.constant.Gender;
+import com.enigma.superwallet.dto.request.ProfilePictureRequest;
 import com.enigma.superwallet.dto.request.RegisterRequest;
 import com.enigma.superwallet.dto.response.CustomerResponse;
 import com.enigma.superwallet.dto.response.DefaultResponse;
@@ -8,8 +10,8 @@ import com.enigma.superwallet.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -51,22 +53,43 @@ public class CustomerController {
     }
 
     @PutMapping
-    public ResponseEntity<?> updateCustomer(@RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<?> updateCustomer(@RequestParam MultipartFile image, @RequestParam  String id , @RequestParam String firstName , @RequestParam String lastName , @RequestParam String phoneNumber , @RequestParam String birthDate , @RequestParam Gender gender , @RequestParam String address , @RequestParam String email , @RequestParam String password) {
+
+        RegisterRequest registerRequest = RegisterRequest.builder()
+                .id(id)
+                .firstName(firstName)
+                .lastName(lastName)
+                .phoneNumber(phoneNumber)
+                .birthDate(birthDate)
+                .gender(gender)
+                .address(address)
+                .email(email)
+                .password(password)
+                .profilePictureRequest(ProfilePictureRequest.builder()
+                        .image(image)
+                        .build())
+                .build();
+
         CustomerResponse customer = customerService.update(registerRequest);
-        if (customer != null) {
+
+        if (registerRequest != null) {
             return ResponseEntity.status(HttpStatus.OK)
                     .body(DefaultResponse.builder()
                             .statusCode(HttpStatus.OK.value())
                             .message("Update Success")
-                            .data(customer)
+//                            .data(registerRequest)
                             .build());
         }
+
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(DefaultResponse.builder()
                         .statusCode(HttpStatus.NOT_FOUND.value())
                         .message("Update Failed")
+                        .data(customer)
                         .build());
     }
+
+
 
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<?> softDeleteCustomer(@PathVariable String id) {

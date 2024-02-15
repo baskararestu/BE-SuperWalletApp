@@ -21,4 +21,5 @@ public class CustomerResponse {
     private Gender gender;
     private String address;
     private UserCredentialResponse userCredential;
+    private String images;
 }
