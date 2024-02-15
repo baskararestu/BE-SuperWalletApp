@@ -6,36 +6,35 @@ import com.enigma.superwallet.entity.Currency;
 import com.enigma.superwallet.entity.CurrencyHistory;
 import com.enigma.superwallet.entity.ExchangeRatesJson;
 import com.enigma.superwallet.repository.CurrencyHistoryRepository;
-import com.enigma.superwallet.repository.CurrencyRepository;
 import com.enigma.superwallet.service.CurrencyHistoryService;
 import com.enigma.superwallet.service.CurrencyService;
+import com.enigma.superwallet.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.*;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class CurrencyHistoryServiceImpl implements CurrencyHistoryService {
     private final CurrencyHistoryRepository currencyHistoryRepository;
-    private final CurrencyRepository currencyRepository;
     private final CurrencyService currencyService;
+    private final ValidationUtil validationUtil;
 
     @Value("${exchange.api.url}")
     private String apiUrl;
 
     @Override
     public void saveCurrencyHistory(String date, String baseCurrency) {
+        if (!validationUtil.isValidDate(date)) {
+            throw new IllegalArgumentException("Invalid date format");
+        }
         LocalDate localDate = LocalDate.parse(date);
         Timestamp timestamp = Timestamp.valueOf(localDate.atTime(LocalTime.MIDNIGHT));
         Long time = timestamp.getTime();
@@ -58,16 +57,16 @@ public class CurrencyHistoryServiceImpl implements CurrencyHistoryService {
                             .code(currencyCode)
                             .name(currencyCode.name())
                             .build())
-                    .orElseGet(() -> currencyRepository.save(new Currency(UUID.randomUUID().toString(), currencyCode, currencyCode.currencyName)));
+                    .orElseThrow(() -> new IllegalStateException("Currency not found"));
 
             CurrencyHistory existingCurrencyHistory = currencyHistoryRepository
                     .findFirstByDateAndBaseAndCurrency(time, baseCurrency, currency);
 
             if (existingCurrencyHistory != null && baseCurrency.equals(currencyCode.name())) {
-                existingCurrencyHistory.setRate(conversionRates.get(currencyCode.name()));
+                existingCurrencyHistory.setRate(Objects.requireNonNull(conversionRates).get(currencyCode.name()));
                 currencyHistoryRepository.save(existingCurrencyHistory);
             } else {
-                CurrencyHistory currencyHistory = new CurrencyHistory(UUID.randomUUID().toString(),time, baseCurrency, currency, conversionRates.get(currencyCode.name()));
+                CurrencyHistory currencyHistory = new CurrencyHistory(UUID.randomUUID().toString(), time, baseCurrency, currency, Objects.requireNonNull(conversionRates).get(currencyCode.name()));
                 currencyHistoryRepository.save(currencyHistory);
             }
         }
@@ -78,7 +77,9 @@ public class CurrencyHistoryServiceImpl implements CurrencyHistoryService {
         LocalDate localDate = LocalDate.parse(date);
         Timestamp timestamp = Timestamp.valueOf(localDate.atTime(LocalTime.MIDNIGHT));
         Long time = timestamp.getTime();
-
+        if (validationUtil.isValidCode(baseCurrency)) {
+            throw new IllegalArgumentException("Invalid base currency code");
+        }
         List<CurrencyHistory> currencyHistoryList = currencyHistoryRepository.findByDateAndBase(time, baseCurrency);
 
         if (currencyHistoryList.isEmpty()) {
@@ -93,11 +94,13 @@ public class CurrencyHistoryServiceImpl implements CurrencyHistoryService {
 
     @Override
     public CurrencyHistoryResponse getCurrencyRate(String baseCurrency, String targetCurrency) {
+        if (validationUtil.isValidCode(baseCurrency)) {
+            throw new IllegalArgumentException("Invalid base currency code");
+        }
         long time = LocalDate.now()
                 .atStartOfDay(ZoneId.systemDefault())
                 .toInstant()
                 .toEpochMilli();
-
         Currency targetCurrencyData = null;
         for (ECurrencyCode code : ECurrencyCode.values()) {
             if (code.name().equals(targetCurrency)) {
@@ -108,43 +111,24 @@ public class CurrencyHistoryServiceImpl implements CurrencyHistoryService {
                 break;
             }
         }
-        Optional<Currency> dataTargetCurrency = currencyService.getOrSaveCurrency(targetCurrencyData);
 
+        Optional<Currency> dataTargetCurrency = currencyService.getOrSaveCurrency(targetCurrencyData);
         CurrencyHistory currencyHistory = currencyHistoryRepository.findFirstByDateAndBaseAndCurrency(time, baseCurrency, dataTargetCurrency.orElse(null));
 
-            if (currencyHistory != null) {
+        if (currencyHistory != null) {
             return new CurrencyHistoryResponse(currencyHistory);
         } else {
-            String url = String.format("%s/pair/%s/%s", apiUrl, baseCurrency, targetCurrency);
-            RestClient restClient = RestClient.create();
-
-            ExchangeRatesJson result = restClient.get()
-                    .uri(url)
-                    .accept(MediaType.APPLICATION_JSON)
-                    .retrieve()
-                    .body(ExchangeRatesJson.class);
-
-            BigDecimal conversionRate = null;
-            long timeStamp = 0L;
-            if (result != null) {
-                conversionRate = result.getConversionRate();
-                timeStamp = result.getTimeLastUpdateUnix();
-            }
-
-            LocalDate date = Instant.ofEpochSecond(timeStamp)
+            LocalDate date = Instant.ofEpochMilli(time)
                     .atZone(ZoneId.systemDefault())
                     .toLocalDate();
-            LocalDateTime midnight = date.atStartOfDay();
-            long midnightTimeStamp = midnight.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 
-            CurrencyHistory newCurrencyHistory =
-                    new CurrencyHistory(UUID.randomUUID().toString(),midnightTimeStamp, baseCurrency,
-                            dataTargetCurrency.orElse(null), conversionRate.doubleValue());
+            saveCurrencyHistory(date.toString(), baseCurrency);
 
-            currencyHistoryRepository.save(newCurrencyHistory);
+            CurrencyHistory data =
+                    currencyHistoryRepository.findFirstByDateAndBaseAndCurrency
+                            (time, baseCurrency, dataTargetCurrency.orElse(null));
 
-            saveCurrencyHistory(date.toString(),baseCurrency);
-            return new CurrencyHistoryResponse(newCurrencyHistory);
+            return new CurrencyHistoryResponse(data);
         }
     }
 }

@@ -3,6 +3,7 @@ package com.enigma.superwallet.controllers;
 import com.enigma.superwallet.constant.AppPath;
 import com.enigma.superwallet.dto.response.CurrencyHistoryResponse;
 import com.enigma.superwallet.dto.response.DefaultResponse;
+import com.enigma.superwallet.dto.response.ErrorResponse;
 import com.enigma.superwallet.service.CurrencyHistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -33,17 +34,25 @@ public class CurrencyHistoryController {
                     .statusCode(HttpStatus.OK.value())
                     .data(currencyHistoryList)
                     .build());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(DefaultResponse.builder()
+                            .statusCode(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .data(null)
+                            .build());
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .body(DefaultResponse.builder()
                             .statusCode(e.getStatusCode().value())
-                            .message(e.getReason())
+                            .message(e.getMessage())
+                            .data(null)
                             .build());
         }
     }
 
-    @PostMapping("/get/{baseCurrency}/{targetCurrency}")
-    public ResponseEntity<?> getRateHistory(@PathVariable String baseCurrency, @PathVariable String targetCurrency) {
+    @PostMapping("/get")
+    public ResponseEntity<?> getRateHistory(@RequestParam String baseCurrency, @RequestParam String targetCurrency) {
         try {
             CurrencyHistoryResponse result = currencyHistoryService.getCurrencyRate(baseCurrency, targetCurrency);
 
@@ -52,9 +61,15 @@ public class CurrencyHistoryController {
                     .statusCode(HttpStatus.OK.value())
                     .data(result)
                     .build());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ErrorResponse.builder()
+                            .statusCode(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .build());
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
-                    .body(DefaultResponse.builder()
+                    .body(ErrorResponse.builder()
                             .statusCode(e.getStatusCode().value())
                             .message(e.getReason())
                             .build());
