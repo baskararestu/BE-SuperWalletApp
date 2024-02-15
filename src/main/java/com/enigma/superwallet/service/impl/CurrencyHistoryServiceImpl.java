@@ -15,11 +15,12 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.*;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -50,43 +51,28 @@ public class CurrencyHistoryServiceImpl implements CurrencyHistoryService {
                 .retrieve()
                 .body(ExchangeRatesJson.class);
 
-        Map<String, Double> conversionRates = null;
-        if (result != null) {
-            conversionRates = result.getConversionRates();
-        }
+        Map<String, Double> conversionRates = result != null ? result.getConversionRates() : null;
 
         for (ECurrencyCode currencyCode : ECurrencyCode.values()) {
             Currency currency = currencyService.getOrSaveCurrency(Currency.builder()
                             .code(currencyCode)
                             .name(currencyCode.name())
                             .build())
-                    .orElseGet(() -> {
-                        Currency newCurrency = new Currency();
-                        newCurrency.setId(UUID.randomUUID().toString());
-                        newCurrency.setCode(currencyCode);
-                        newCurrency.setName(currencyCode.currencyName);
-                        return currencyRepository.save(newCurrency);
-                    });
+                    .orElseGet(() -> currencyRepository.save(new Currency(UUID.randomUUID().toString(), currencyCode, currencyCode.currencyName)));
 
             CurrencyHistory existingCurrencyHistory = currencyHistoryRepository
                     .findFirstByDateAndBaseAndCurrency(time, baseCurrency, currency);
 
-            if (existingCurrencyHistory != null) {
-                if (baseCurrency.equals(currencyCode.name())) {
-                    existingCurrencyHistory.setRate(conversionRates.get(currencyCode.name()));
-                    currencyHistoryRepository.save(existingCurrencyHistory);
-                }
+            if (existingCurrencyHistory != null && baseCurrency.equals(currencyCode.name())) {
+                existingCurrencyHistory.setRate(conversionRates.get(currencyCode.name()));
+                currencyHistoryRepository.save(existingCurrencyHistory);
             } else {
-                CurrencyHistory currencyHistory = new CurrencyHistory();
-                currencyHistory.setDate(time);
-                currencyHistory.setBase(baseCurrency);
-                currencyHistory.setCurrency(currency);
-                currencyHistory.setRate(conversionRates.get(currencyCode.name()));
-
+                CurrencyHistory currencyHistory = new CurrencyHistory(UUID.randomUUID().toString(),time, baseCurrency, currency, conversionRates.get(currencyCode.name()));
                 currencyHistoryRepository.save(currencyHistory);
             }
         }
     }
+
     @Override
     public List<CurrencyHistoryResponse> getCurrencyHistoryByDateAndBaseCurrency(String date, String baseCurrency) {
         LocalDate localDate = LocalDate.parse(date);
@@ -103,5 +89,62 @@ public class CurrencyHistoryServiceImpl implements CurrencyHistoryService {
         return currencyHistoryList.stream()
                 .map(CurrencyHistoryResponse::new)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public CurrencyHistoryResponse getCurrencyRate(String baseCurrency, String targetCurrency) {
+        long time = LocalDate.now()
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli();
+
+        Currency targetCurrencyData = null;
+        for (ECurrencyCode code : ECurrencyCode.values()) {
+            if (code.name().equals(targetCurrency)) {
+                targetCurrencyData = Currency.builder()
+                        .code(code)
+                        .name(code.currencyName)
+                        .build();
+                break;
+            }
+        }
+        Optional<Currency> dataTargetCurrency = currencyService.getOrSaveCurrency(targetCurrencyData);
+
+        CurrencyHistory currencyHistory = currencyHistoryRepository.findFirstByDateAndBaseAndCurrency(time, baseCurrency, dataTargetCurrency.orElse(null));
+
+            if (currencyHistory != null) {
+            return new CurrencyHistoryResponse(currencyHistory);
+        } else {
+            String url = String.format("%s/pair/%s/%s", apiUrl, baseCurrency, targetCurrency);
+            RestClient restClient = RestClient.create();
+
+            ExchangeRatesJson result = restClient.get()
+                    .uri(url)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .body(ExchangeRatesJson.class);
+
+            BigDecimal conversionRate = null;
+            long timeStamp = 0L;
+            if (result != null) {
+                conversionRate = result.getConversionRate();
+                timeStamp = result.getTimeLastUpdateUnix();
+            }
+
+            LocalDate date = Instant.ofEpochSecond(timeStamp)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
+            LocalDateTime midnight = date.atStartOfDay();
+            long midnightTimeStamp = midnight.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+
+            CurrencyHistory newCurrencyHistory =
+                    new CurrencyHistory(UUID.randomUUID().toString(),midnightTimeStamp, baseCurrency,
+                            dataTargetCurrency.orElse(null), conversionRate.doubleValue());
+
+            currencyHistoryRepository.save(newCurrencyHistory);
+
+            saveCurrencyHistory(date.toString(),baseCurrency);
+            return new CurrencyHistoryResponse(newCurrencyHistory);
+        }
     }
 }

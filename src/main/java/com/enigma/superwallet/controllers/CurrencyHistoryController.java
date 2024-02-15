@@ -19,6 +19,7 @@ import java.util.List;
 @RequestMapping(AppPath.CURRENCY)
 public class CurrencyHistoryController {
     private final CurrencyHistoryService currencyHistoryService;
+
     @PostMapping
     public ResponseEntity<?> getCurrencyHistory(
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
@@ -32,7 +33,26 @@ public class CurrencyHistoryController {
                     .statusCode(HttpStatus.OK.value())
                     .data(currencyHistoryList)
                     .build());
-        }catch (ResponseStatusException e) {
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(DefaultResponse.builder()
+                            .statusCode(e.getStatusCode().value())
+                            .message(e.getReason())
+                            .build());
+        }
+    }
+
+    @PostMapping("/get/{baseCurrency}/{targetCurrency}")
+    public ResponseEntity<?> getRateHistory(@PathVariable String baseCurrency, @PathVariable String targetCurrency) {
+        try {
+            CurrencyHistoryResponse result = currencyHistoryService.getCurrencyRate(baseCurrency, targetCurrency);
+
+            return ResponseEntity.status(HttpStatus.OK).body(DefaultResponse.builder()
+                    .message("Success get history currency rate")
+                    .statusCode(HttpStatus.OK.value())
+                    .data(result)
+                    .build());
+        } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .body(DefaultResponse.builder()
                             .statusCode(e.getStatusCode().value())
