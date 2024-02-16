@@ -43,9 +43,8 @@ public class TransactionServiceImpl implements TransactionsService {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found");
             }
 
-            // Deduct deposit amount from the dummy bank balance
             String dummyBankId = depositRequest.getDummyBankId();
-            double amount = depositRequest.getAmount() + fee;
+            double amount = depositRequest.getAmount();
             dummyBankService.reduceBalance(dummyBankId, amount);
 
             AccountResponse updated = accountService.updateIdrAccountBalance(depositRequest.getAccountId(), amount);
@@ -66,7 +65,7 @@ public class TransactionServiceImpl implements TransactionsService {
 
             transactionRepositroy.saveAndFlush(transactionHistory);
             String formattedAmount = formatAmount(depositRequest.getAmount());
-            String formattedNewBalance = formatAmount(account.getBalance());
+            String formattedNewBalance = formatAmount(updated.getBalance());
 
             return DepositResponse.builder()
                     .transactionId(transactionHistory.getId())

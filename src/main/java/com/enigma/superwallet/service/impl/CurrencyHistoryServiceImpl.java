@@ -36,6 +36,9 @@ public class CurrencyHistoryServiceImpl implements CurrencyHistoryService {
             throw new IllegalArgumentException("Invalid date format");
         }
         LocalDate localDate = LocalDate.parse(date);
+        if (localDate.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("Date cannot exceed current date");
+        }
         Timestamp timestamp = Timestamp.valueOf(localDate.atTime(LocalTime.MIDNIGHT));
         Long time = timestamp.getTime();
 
@@ -118,17 +121,7 @@ public class CurrencyHistoryServiceImpl implements CurrencyHistoryService {
         if (currencyHistory != null) {
             return new CurrencyHistoryResponse(currencyHistory);
         } else {
-            LocalDate date = Instant.ofEpochMilli(time)
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate();
-
-            saveCurrencyHistory(date.toString(), baseCurrency);
-
-            CurrencyHistory data =
-                    currencyHistoryRepository.findFirstByDateAndBaseAndCurrency
-                            (time, baseCurrency, dataTargetCurrency.orElse(null));
-
-            return new CurrencyHistoryResponse(data);
+            throw new RuntimeException("Currency rate not found");
         }
     }
 }

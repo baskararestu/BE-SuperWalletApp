@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -22,6 +23,7 @@ public class CurrencyHistoryController {
     private final CurrencyHistoryService currencyHistoryService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> getCurrencyHistory(
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam("baseCurrency") String baseCurrency
@@ -36,22 +38,20 @@ public class CurrencyHistoryController {
                     .build());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(DefaultResponse.builder()
+                    .body(ErrorResponse.builder()
                             .statusCode(HttpStatus.BAD_REQUEST.value())
                             .message(e.getMessage())
-                            .data(null)
                             .build());
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
-                    .body(DefaultResponse.builder()
+                    .body(ErrorResponse.builder()
                             .statusCode(e.getStatusCode().value())
                             .message(e.getMessage())
-                            .data(null)
                             .build());
         }
     }
 
-    @PostMapping("/get")
+    @GetMapping("/get")
     public ResponseEntity<?> getRateHistory(@RequestParam String baseCurrency, @RequestParam String targetCurrency) {
         try {
             CurrencyHistoryResponse result = currencyHistoryService.getCurrencyRate(baseCurrency, targetCurrency);
@@ -71,7 +71,13 @@ public class CurrencyHistoryController {
             return ResponseEntity.status(e.getStatusCode())
                     .body(ErrorResponse.builder()
                             .statusCode(e.getStatusCode().value())
-                            .message(e.getReason())
+                            .message(e.getMessage())
+                            .build());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ErrorResponse.builder()
+                            .statusCode(HttpStatus.NOT_FOUND.value())
+                            .message(e.getMessage())
                             .build());
         }
     }

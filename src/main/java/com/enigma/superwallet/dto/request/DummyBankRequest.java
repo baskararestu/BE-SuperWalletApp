@@ -12,8 +12,6 @@ import lombok.NoArgsConstructor;
 @Builder(toBuilder = true)
 public class DummyBankRequest {
     @NotBlank
-    private String customerId;
-    @NotBlank
     private String bankNumber;
     @NotBlank
     private String cvv;
