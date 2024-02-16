@@ -9,6 +9,8 @@ import com.enigma.superwallet.repository.CurrencyHistoryRepository;
 import com.enigma.superwallet.service.CurrencyHistoryService;
 import com.enigma.superwallet.service.CurrencyService;
 import com.enigma.superwallet.util.ValidationUtil;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -26,6 +28,7 @@ public class CurrencyHistoryServiceImpl implements CurrencyHistoryService {
     private final CurrencyHistoryRepository currencyHistoryRepository;
     private final CurrencyService currencyService;
     private final ValidationUtil validationUtil;
+    private final EntityManager entityManager;
 
     @Value("${exchange.api.url}")
     private String apiUrl;
@@ -116,7 +119,14 @@ public class CurrencyHistoryServiceImpl implements CurrencyHistoryService {
         }
 
         Optional<Currency> dataTargetCurrency = currencyService.getOrSaveCurrency(targetCurrencyData);
+//        String queryStr = "SELECT * FROM m_currency_history WHERE date = :time AND base = :baseCurrency AND currency_id = :currencyId";
+//        Query query = entityManager.createNativeQuery(queryStr, CurrencyHistory.class);
+//        query.setParameter("time", time);
+//        query.setParameter("baseCurrency", baseCurrency);
+//        query.setParameter("currencyId", dataTargetCurrency.get().getId());
+//        CurrencyHistory currencyHistory = (CurrencyHistory) query.getResultList();
         CurrencyHistory currencyHistory = currencyHistoryRepository.findFirstByDateAndBaseAndCurrency(time, baseCurrency, dataTargetCurrency.orElse(null));
+
 
         if (currencyHistory != null) {
             return new CurrencyHistoryResponse(currencyHistory);
