@@ -3,10 +3,14 @@ package com.enigma.superwallet.service.impl;
 import com.enigma.superwallet.dto.request.DummyBankRequest;
 import com.enigma.superwallet.dto.response.CustomerResponse;
 import com.enigma.superwallet.dto.response.DummyBankResponse;
+import com.enigma.superwallet.dto.response.UserCredentialResponse;
+import com.enigma.superwallet.entity.Customer;
 import com.enigma.superwallet.entity.DummyBank;
 import com.enigma.superwallet.repository.DummyBankRepository;
+import com.enigma.superwallet.security.JwtUtil;
 import com.enigma.superwallet.service.CustomerService;
 import com.enigma.superwallet.service.DummyBankService;
+import com.enigma.superwallet.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,11 +24,18 @@ import java.util.Optional;
 public class DummyBankServiceImpl implements DummyBankService {
     private final DummyBankRepository dummyBankRepo;
     private final CustomerService customerService;
+    private final JwtUtil jwtUtil;
+    private final ValidationUtil util;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public DummyBankResponse createDummyBank(DummyBankRequest dummyBankRequest) {
         try {
+            String token = util.extractTokenFromHeader();
+
+            String customerId = jwtUtil.getUserInfoByToken(token).get("userId");
+            System.out.println(customerId);
+
             DummyBank dummyBank = DummyBank.builder()
                     .bankNumber(dummyBankRequest.getBankNumber())
                     .cvv(dummyBankRequest.getCvv())
@@ -32,7 +43,20 @@ public class DummyBankServiceImpl implements DummyBankService {
                     .build();
 
             dummyBank = dummyBankRepo.save(dummyBank);
-            CustomerResponse customerResponse = customerService.getById(dummyBankRequest.getCustomerId());
+            Optional<Customer> customer = customerService.getCustomerByUserCredentialId(customerId);
+            CustomerResponse customerResponse = CustomerResponse.builder()
+                    .id(customer.get().getId())
+                    .firstName(customer.get().getFirstName())
+                    .lastName(customer.get().getLastName())
+                    .phoneNumber(customer.get().getPhoneNumber())
+                    .address(customer.get().getAddress())
+                    .gender(customer.get().getGender())
+                    .birthDate(customer.get().getBirthDate())
+                    .userCredential(UserCredentialResponse.builder()
+                            .email(customer.get().getUserCredential().getEmail())
+                            .role(customer.get().getUserCredential().getRole().getRoleName())
+                            .build())
+                    .build();
             if (customerResponse == null) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found");
             }
@@ -75,18 +99,13 @@ public class DummyBankServiceImpl implements DummyBankService {
         if (optionalDummyBank.isPresent()) {
             DummyBank dummyBank = optionalDummyBank.get();
 
-            // Check if the balance is sufficient
             if (dummyBank.getBalance() >= amount) {
-                // Reduce the balance
                 dummyBank.setBalance(dummyBank.getBalance() - amount);
 
-                // Save the updated DummyBank entity
                 dummyBank = dummyBankRepo.save(dummyBank);
 
-                // Format the balance
                 String formattedBalance = String.format("%.2f", dummyBank.getBalance());
 
-                // Return the updated DummyBankResponse
                 return DummyBankResponse.builder()
                         .id(dummyBank.getId())
                         .bankNumber(dummyBank.getBankNumber())

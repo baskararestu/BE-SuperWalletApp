@@ -2,6 +2,8 @@ package com.enigma.superwallet.service;
 
 import com.enigma.superwallet.entity.Currency;
 
+import java.util.Optional;
+
 public interface CurrencyService {
-    Currency getOrSaveCurrency(Currency currency);
+    Optional<Currency> getOrSaveCurrency(Currency currency);
 }

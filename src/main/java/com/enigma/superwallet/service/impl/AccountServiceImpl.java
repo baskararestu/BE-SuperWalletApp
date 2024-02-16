@@ -15,7 +15,6 @@ import com.enigma.superwallet.service.CustomerService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -48,12 +47,17 @@ public class AccountServiceImpl implements AccountService {
                     .code(defaultCode)
                     .name(defaultCode.currencyName)
                     .build();
-            currency = currencyService.getOrSaveCurrency(currency);
+
+            Optional<Currency> optionalCurrency = currencyService.getOrSaveCurrency(currency);
+            if (optionalCurrency.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to get or save currency");
+            }
+            currency = optionalCurrency.get();
 
             int defaultNum = 100;
             int min = 1000000;
             int max = 9999999;
-            Integer random = min + (int) (Math.random() * ((max - min) + 1));
+            int random = min + (int) (Math.random() * ((max - min) + 1));
 
             CustomerResponse customerResponse = customerService.getById(accountRequest.getCustomerId());
             Customer customer = Customer.builder()
@@ -73,7 +77,7 @@ public class AccountServiceImpl implements AccountService {
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
                     .currency(currency)
-                    .accountNumber(String.valueOf(defaultNum) + String.valueOf(random))
+                    .accountNumber(String.valueOf(defaultNum + random))
                     .balance(0d)
                     .customer(customer)
                     .build();
@@ -127,8 +131,11 @@ public class AccountServiceImpl implements AccountService {
                     .code(defaultCode)
                     .name(defaultCode.currencyName)
                     .build();
-            currency = currencyService.getOrSaveCurrency(currency);
-
+            Optional<Currency> optionalCurrency = currencyService.getOrSaveCurrency(currency);
+            if (optionalCurrency.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to get or save currency");
+            }
+            currency = optionalCurrency.get();
             int defaultNum = 100;
             int min = 1000000;
             int max = 9999999;
@@ -184,13 +191,13 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional
-    public AccountResponse updateAccountBalance(String accountId, Double newBalance) {
+    public AccountResponse updateAccountBalance(String accountId, Double amount) {
         try {
             Optional<Account> optionalAccount = accountRepository.findById(accountId);
             if (optionalAccount.isPresent()) {
                 Account account = optionalAccount.get();
 
-                account.setBalance(newBalance);
+                account.setBalance(amount);
 
                 return AccountResponse.builder()
                         .firstName(account.getCustomer().getFirstName())
@@ -239,5 +246,20 @@ public class AccountServiceImpl implements AccountService {
         }
     }
 
+    @Override
+    public AccountResponse getByAccountNumber(String accountNumber) {
+       Account dataAccount= accountRepository.findByAccountNumber(accountNumber);
+        if(dataAccount ==null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account number not found");
+        }
 
+        return AccountResponse.builder()
+                .id(dataAccount.getId())
+                .firstName(dataAccount.getCustomer().getFirstName())
+                .lastName(dataAccount.getCustomer().getLastName())
+                .accountNumber(dataAccount.getAccountNumber())
+                .currency(dataAccount.getCurrency())
+                .balance(dataAccount.getBalance())
+                .build();
+    }
 }

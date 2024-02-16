@@ -21,7 +21,7 @@ public class AccountController {
     private final AccountService accountService;
 
     @PostMapping
-//    @PreAuthorize("hasRole('ROLE_CUSTOMER')")
+    @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     public ResponseEntity<?> createAccount(@RequestBody AccountRequest accountRequest) {
         System.out.println("from controller= " + accountRequest);
         AccountResponse accountResponse = accountService.createAccount(accountRequest);
@@ -41,7 +41,7 @@ public class AccountController {
     }
 
     @GetMapping
-//    @PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')")
     public ResponseEntity<?> getAllAccount() {
         List<AccountResponse> accountList = accountService.getAllAccount();
         return ResponseEntity.status(HttpStatus.OK)
