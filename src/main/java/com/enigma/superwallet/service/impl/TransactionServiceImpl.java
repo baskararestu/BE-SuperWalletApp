@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 @Service
@@ -112,11 +113,10 @@ public class TransactionServiceImpl implements TransactionsService {
         if (transactionType == null)
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction type not found");
         try {
-            fee = 1000;
-
             BigDecimal totalAmount;
             String formattedAmount;
             if (sender.getCurrency() == reciver.getCurrency()) {
+                fee = 1000;
                 Double newBalanceSender = sender.getBalance() - request.getAmountTransfer();
                 accountService.updateAccountBalance(sender.getId(), newBalanceSender);
                 Double newBalanceReciver = reciver.getBalance() + request.getAmountTransfer();
@@ -134,16 +134,18 @@ public class TransactionServiceImpl implements TransactionsService {
                 transactionRepositroy.saveAndFlush(transactionHistory);
 
             } else {
-           CurrencyHistoryResponse currency = currencyHistoryService.getCurrencyRate(sender.getCurrency().getCode().toString(),reciver.getCurrency().getCode().toString());
+                CurrencyHistoryResponse currency = currencyHistoryService.getCurrencyRate(sender.getCurrency().getCode().toString(), reciver.getCurrency().getCode().toString());
                 Double amountTransfer = request.getAmountTransfer();
                 BigDecimal amountTransferBigDecimal = BigDecimal.valueOf(amountTransfer);
                 totalAmount = amountTransferBigDecimal.multiply(currency.getRate());
+                fee = 1;
+
                 Double totalAmountDouble = totalAmount.doubleValue();
 
-                Double newBalanceSender = sender.getBalance() - request.getAmountTransfer();
+                Double newBalanceSender = sender.getBalance() - request.getAmountTransfer() - fee;
                 accountService.updateAccountBalance(sender.getId(), newBalanceSender);
-                Double newBalanceReciver = reciver.getBalance() + request.getAmountTransfer();
-                accountService.updateAccountBalance(reciver.getId(), totalAmountDouble);
+                Double newBalanceReciver = reciver.getBalance() + totalAmountDouble;
+                accountService.updateAccountBalance(reciver.getId(), newBalanceReciver);
 
                 formattedAmount = formatAmount(totalAmountDouble);
                 TransactionHistory transactionHistory = TransactionHistory.builder()
