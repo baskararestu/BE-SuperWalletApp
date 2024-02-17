@@ -17,4 +17,5 @@ public class TransferResponse {
     private String toNumber;
     private String toCurrency;
     private String totalAmount;
+    private String fee;
 }
