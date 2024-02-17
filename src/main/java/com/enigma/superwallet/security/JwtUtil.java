@@ -6,6 +6,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.enigma.superwallet.entity.Admin;
 import com.enigma.superwallet.entity.AppUser;
 import com.enigma.superwallet.entity.Customer;
 import com.enigma.superwallet.service.CustomerService;
@@ -36,14 +37,15 @@ public class JwtUtil {
     public String generateToken(AppUser appUser) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(jwtSecret.getBytes(StandardCharsets.UTF_8));
-            Optional<Customer> customer= customerService.getCustomerByUserCredentialId(appUser.getId());
+            Optional<Customer> customer = customerService.getCustomerByUserCredentialId(appUser.getId());
+            String customerId = customer.map(Customer::getId).orElse(""); // Get customer ID or empty string if customer is empty
             return JWT.create()
                     .withIssuer(appName)
                     .withSubject(appUser.getId())
-                    .withClaim("customerId",customer.get().getId())
+                    .withClaim("customerId", customerId)
                     .withExpiresAt(Instant.now().plusSeconds(jwtExpirationInSecond))
                     .withIssuedAt(Instant.now())
-                    .withClaim("app",appUser.getRole().name())
+                    .withClaim("app", appUser.getRole().name())
                     .sign(algorithm);
         } catch (JWTCreationException e) {
             throw new RuntimeException();
