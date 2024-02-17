@@ -44,6 +44,7 @@ public class AdminServiceImpl implements AdminService {
                         .fullName(admin.getFullName())
                         .email(admin.getUserCredential().getEmail())
                         .phoneNumber(admin.getPhoneNumber())
+                        .address(admin.getAddress())
                         .role(admin.getUserCredential().getRole().getRoleName())
                         .build())
                 .toList();

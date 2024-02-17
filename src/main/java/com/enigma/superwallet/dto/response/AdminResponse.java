@@ -15,6 +15,7 @@ public class AdminResponse {
     private String id;
     private String fullName;
     private String email;
+    private String address;
     private String phoneNumber;
     private ERole role;
 }
