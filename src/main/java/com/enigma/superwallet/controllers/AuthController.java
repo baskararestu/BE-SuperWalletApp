@@ -19,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:5173")
 @RequestMapping(AppPath.AUTH)
 public class AuthController {
     private final AuthService authService;
