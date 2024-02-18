@@ -8,9 +8,8 @@ import com.enigma.superwallet.dto.response.LoginResponse;
 import com.enigma.superwallet.dto.response.RegisterResponse;
 
 public interface AuthService {
-    RegisterResponse register(RegisterRequest registerRequest);
+    RegisterResponse registerCustomer(RegisterRequest registerRequest);
     LoginResponse login(LoginRequest loginRequest);
     RegisterResponse registerSuperAdmin(AuthAdminRequest authAdminRequest);
     RegisterResponse registerAdmin(AuthAdminRequest authAdminRequest);
-    LoginAdminResponse loginAdmin(LoginRequest loginRequest);
 }

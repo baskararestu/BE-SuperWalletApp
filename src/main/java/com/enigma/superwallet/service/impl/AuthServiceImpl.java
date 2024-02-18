@@ -91,7 +91,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Transactional(rollbackOn = Exception.class)
     @Override
-    public RegisterResponse register(RegisterRequest registerRequest) {
+    public RegisterResponse registerCustomer(RegisterRequest registerRequest) {
         try {
             validationUtil.validate(registerRequest);
             Role role = getRole(ERole.ROLE_CUSTOMER);
@@ -117,23 +117,7 @@ public class AuthServiceImpl implements AuthService {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             AppUser appUser = (AppUser) authentication.getPrincipal();
             String token = jwtUtil.generateToken(appUser);
-            Optional<Customer> customerResponse = customerService.getCustomerByUserCredentialId(appUser.getId());
-            return mapToLoginResponse(customerResponse, appUser.getRole(), token);
-        } catch (BadCredentialsException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Invalid email or password", e);
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An internal server error occurred", e);
-        }
-    }
-
-    @Override
-    public LoginAdminResponse loginAdmin(LoginRequest loginRequest) {
-        try {
-            Authentication authentication = getAuthentication(loginRequest);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            AppUser appUser = (AppUser) authentication.getPrincipal();
-            String token = jwtUtil.generateToken(appUser);
-            return mapToLoginAdminsResponse(appUser, token);
+            return mapToLoginResponse(appUser.getRole(), token);
         } catch (BadCredentialsException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Invalid email or password", e);
         } catch (Exception e) {
