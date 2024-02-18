@@ -4,8 +4,8 @@ import com.enigma.superwallet.constant.ECurrencyCode;
 import com.enigma.superwallet.constant.ETransactionType;
 import com.enigma.superwallet.dto.request.DepositRequest;
 import com.enigma.superwallet.dto.request.TransferRequest;
+import com.enigma.superwallet.dto.request.WithdrawalRequest;
 import com.enigma.superwallet.dto.response.*;
-import com.enigma.superwallet.entity.Account;
 import com.enigma.superwallet.entity.TransactionHistory;
 import com.enigma.superwallet.entity.TransactionType;
 import com.enigma.superwallet.repository.TransactionRepositroy;
@@ -20,7 +20,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
+
+import static com.enigma.superwallet.mapper.TransactionsMapper.*;
+import static com.enigma.superwallet.util.WithdrawalCodeGenerator.generateUniqueWithdrawalCode;
 
 @Service
 @RequiredArgsConstructor
@@ -56,39 +58,31 @@ public class TransactionServiceImpl implements TransactionsService {
 
             String dummyBankId = depositRequest.getDummyBankId();
             double amount = depositRequest.getAmount();
-            dummyBankService.reduceBalance(dummyBankId, amount);
-
-            AccountResponse updated = accountService.updateIdrAccountBalance(depositRequest.getAccountId(), amount);
-
-            TransactionType depositTransactionType = transactionTypeService.getOrSave(
-                    TransactionType.builder().transactionType(ETransactionType.DEPOSIT).build());
-
-            TransactionHistory transactionHistory = TransactionHistory.builder()
-                    .transactionDate(LocalDateTime.now())
-                    .sourceAccount(Account.builder().id(account.getId()).build())
-                    .destinationAccount(Account.builder().id(account.getId()).build())
-                    .amount(depositRequest.getAmount())
-                    .transactionType(depositTransactionType)
-                    .fee(0.0)
-                    .build();
-
-            transactionRepositroy.saveAndFlush(transactionHistory);
-            String formattedAmount = formatAmount(depositRequest.getAmount());
-            String formattedNewBalance = formatAmount(updated.getBalance());
-
-            return DepositResponse.builder()
-                    .transactionId(transactionHistory.getId())
-                    .customerName(account.getCustomer().getFirstName() + " " + account.getCustomer().getLastName())
-                    .amount(formattedAmount)
-                    .currency(ECurrencyCode.IDR)
-                    .accountNumber(account.getAccountNumber())
-                    .newBalance(formattedNewBalance)
-                    .build();
+            return getDeposit(depositRequest, dummyBankId, amount, account);
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An internal server error occurred", e);
         }
+    }
+
+    private DepositResponse getDeposit(DepositRequest depositRequest, String dummyBankId, double amount, AccountResponse account) {
+        dummyBankService.reduceBalance(dummyBankId, amount);
+
+        AccountResponse updated = accountService.updateIdrAccountBalance(depositRequest.getAccountId(), amount);
+
+        TransactionType depositTransactionType = transactionTypeService.getOrSave(
+                TransactionType.builder().transactionType(ETransactionType.DEPOSIT).build());
+
+        TransactionHistory transactionHistory =
+                mapToTransactionHistory(
+                        depositRequest.getAmount(), account, depositTransactionType, "", fee);
+
+        transactionRepositroy.saveAndFlush(transactionHistory);
+        String formattedAmount = formatAmount(depositRequest.getAmount());
+        String formattedNewBalance = formatAmount(updated.getBalance());
+
+        return mapToDepositResponse(transactionHistory, account, formattedAmount, formattedNewBalance);
     }
 
     private String formatAmount(Double amount) {
@@ -125,7 +119,7 @@ public class TransactionServiceImpl implements TransactionsService {
     public TransferResponse getTransfer(TransferRequest request, AccountResponse sender, AccountResponse receiver, TransactionType transactionType) {
         BigDecimal totalAmount;
         String formattedAmount;
-        BigDecimal totalFee= BigDecimal.valueOf(0);
+        BigDecimal totalFee = BigDecimal.valueOf(0);
         if (sender.getCurrency() == receiver.getCurrency()) {
             fee = 0.0;
             Double newBalanceSender = sender.getBalance() - request.getAmountTransfer() - fee;
@@ -134,16 +128,6 @@ public class TransactionServiceImpl implements TransactionsService {
             accountService.updateAccountBalance(receiver.getId(), newBalanceReceiver);
 
             formattedAmount = formatAmount(request.getAmountTransfer());
-            TransactionHistory transactionHistory = TransactionHistory.builder()
-                    .transactionDate(LocalDateTime.now())
-                    .sourceAccount(Account.builder().id(sender.getId()).build())
-                    .destinationAccount(Account.builder().id(receiver.getId()).build())
-                    .amount(request.getAmountTransfer())
-                    .transactionType(transactionType)
-                    .fee(fee)
-                    .build();
-            transactionRepositroy.saveAndFlush(transactionHistory);
-
         } else {
             CurrencyHistoryResponse currency = currencyHistoryService.getCurrencyRate(sender.getCurrency().getCode().toString(), receiver.getCurrency().getCode().toString());
             Double amountTransfer = request.getAmountTransfer();
@@ -166,26 +150,47 @@ public class TransactionServiceImpl implements TransactionsService {
             accountService.updateAccountBalance(receiver.getId(), newBalanceReceiver);
 
             formattedAmount = formatAmount(totalAmountDouble);
-            TransactionHistory transactionHistory = TransactionHistory.builder()
-                    .transactionDate(LocalDateTime.now())
-                    .sourceAccount(Account.builder().id(sender.getId()).build())
-                    .destinationAccount(Account.builder().id(receiver.getId()).build())
-                    .amount(Double.valueOf(String.valueOf(totalAmount)))
-                    .transactionType(transactionType)
-                    .fee(totalFee.doubleValue())
-                    .build();
-            transactionRepositroy.saveAndFlush(transactionHistory);
-
         }
-        return TransferResponse.builder()
-                .from(sender.getCustomer().getFirstName() + sender.getCustomer().getLastName())
-                .fromNumber(sender.getAccountNumber())
-                .fromCurrency(sender.getCurrency().getCode().toString())
-                .to(receiver.getCustomer().getFirstName() + receiver.getCustomer().getLastName())
-                .toNumber(receiver.getAccountNumber())
-                .toCurrency(receiver.getCurrency().getCode().toString())
-                .totalAmount(formattedAmount)
-                .fee(String.valueOf(totalFee))
-                .build();
+
+        TransactionHistory transactionHistory = mapToTransactionHistory
+                (request.getAmountTransfer(), sender, receiver, transactionType, "",
+                totalFee.doubleValue());
+        transactionRepositroy.saveAndFlush(transactionHistory);
+
+        return mapToTransferResponse(sender, receiver, formattedAmount, totalFee);
+    }
+
+    @Transactional
+    @Override
+    public WithdrawalResponse withdraw(WithdrawalRequest request) {
+        AccountResponse account = accountService.getById(request.getAccountId());
+        CustomerResponse customer = customerService.getById(account.getCustomer().getId());
+        String token = util.extractTokenFromHeader();
+
+        String customerId = jwtUtil.getUserInfoByToken(token).get("customerId");
+        if (account == null)
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found");
+
+        if (account.getBalance() < request.getAmount())
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Insufficient balance");
+
+        if(!customer.getId().equals(customerId))
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"Invalid withdraw");
+
+        String withdrawalCode = generateUniqueWithdrawalCode();
+
+        Double newBalance = account.getBalance() - request.getAmount();
+        accountService.updateAccountBalance(account.getId(), newBalance);
+
+        TransactionType withdrawalTransactionType = transactionTypeService.getOrSave(
+                TransactionType.builder().transactionType(ETransactionType.WITHDRAW).build());
+        double totalAmount = request.getAmount();
+        fee = 0.0;
+        TransactionHistory transactionHistory =
+                mapToTransactionHistory(
+                        totalAmount, account, withdrawalTransactionType, withdrawalCode, fee);
+        transactionRepositroy.saveAndFlush(transactionHistory);
+
+        return mapToWithdrawalResponse(transactionHistory, withdrawalCode);
     }
 }

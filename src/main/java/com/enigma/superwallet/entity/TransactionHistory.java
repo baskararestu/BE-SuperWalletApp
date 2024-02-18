@@ -38,4 +38,7 @@ public class TransactionHistory {
 
     @Column(nullable = false, columnDefinition = "DOUBLE PRECISION CHECK (fee >= 0)")
     private Double fee;
+
+    @Column(name = "withdrawal_code", columnDefinition = "VARCHAR(255) DEFAULT ''")
+    private String withdrawalCode;
 }

@@ -3,10 +3,8 @@ package com.enigma.superwallet.controllers;
 import com.enigma.superwallet.constant.AppPath;
 import com.enigma.superwallet.dto.request.DepositRequest;
 import com.enigma.superwallet.dto.request.TransferRequest;
-import com.enigma.superwallet.dto.response.DefaultResponse;
-import com.enigma.superwallet.dto.response.DepositResponse;
-import com.enigma.superwallet.dto.response.ErrorResponse;
-import com.enigma.superwallet.dto.response.TransferResponse;
+import com.enigma.superwallet.dto.request.WithdrawalRequest;
+import com.enigma.superwallet.dto.response.*;
 import com.enigma.superwallet.service.TransactionsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -55,6 +53,25 @@ public class TransactionController {
         }catch (ResponseStatusException e){
             return ResponseEntity.status(e.getStatusCode())
                     .body(ErrorResponse.builder()
+                            .statusCode(e.getStatusCode().value())
+                            .message(e.getReason())
+                            .build());
+        }
+    }
+
+    @PostMapping("/withdrawal")
+    public ResponseEntity<?> withdrawal(@RequestBody WithdrawalRequest withdrawalRequest) {
+        try {
+            WithdrawalResponse response = transactionsService.withdraw(withdrawalRequest);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(DefaultResponse.builder()
+                            .statusCode(HttpStatus.OK.value())
+                            .message("Successfully withdrawn from account")
+                            .data(response)
+                            .build());
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(DefaultResponse.builder()
                             .statusCode(e.getStatusCode().value())
                             .message(e.getReason())
                             .build());
