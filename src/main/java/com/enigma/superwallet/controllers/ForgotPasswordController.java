@@ -1,5 +1,6 @@
 package com.enigma.superwallet.controllers;
 
+import com.enigma.superwallet.constant.AppPath;
 import com.enigma.superwallet.dto.request.ForgotPasswordRequest;
 import com.enigma.superwallet.dto.response.ForgetPasswordResponse;
 import com.enigma.superwallet.service.ForgotPasswordService;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/reset-password")
+@RequestMapping(AppPath.PASSWORD)
 public class ForgotPasswordController {
 
     private final ForgotPasswordService forgotPasswordService;

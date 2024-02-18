@@ -20,9 +20,12 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -47,6 +50,8 @@ public class CustomerServiceImpl implements CustomerService {
     private final DummyBankRepository dummyBankRepository;
     private final ProfileImageRepository profileImageRepository;
 
+    @Value("${app.super_wallet.path.firebaseUrl}")
+    String firebaseJson;
 
     @Override
     public CustomerResponse createCustomer(Customer customer) {
@@ -157,10 +162,8 @@ public class CustomerServiceImpl implements CustomerService {
                     .build();
 
         }catch (Exception e) {
-            e.getMessage();
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,e.getMessage());
         }
-        return null;
-
     }
 
     @Override
@@ -212,7 +215,7 @@ public class CustomerServiceImpl implements CustomerService {
     private String uploadFile(File file, String fileName) throws IOException {
         BlobId blobId = BlobId.of("superwallet-83957.appspot.com", fileName);
         BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType("media").build();
-        Credentials credentials = GoogleCredentials.fromStream(new FileInputStream("/home/user/Batch14/finalProject/SuperWallet/v5/super-wallet-backend/src/main/resources/superwallet-83957-firebase-adminsdk-v86yl-1c4cfaf2ed.json"));
+        Credentials credentials = GoogleCredentials.fromStream(new FileInputStream(firebaseJson));
         Storage storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
         storage.create(blobInfo, Files.readAllBytes(file.toPath()));
         return String.format("https://firebasestorage.googleapis.com/v0/b/superwallet-83957.appspot.com/o/%s?alt=media", URLEncoder.encode(fileName, StandardCharsets.UTF_8));

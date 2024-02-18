@@ -6,12 +6,14 @@ import com.enigma.superwallet.dto.request.ProfilePictureRequest;
 import com.enigma.superwallet.dto.request.RegisterRequest;
 import com.enigma.superwallet.dto.response.CustomerResponse;
 import com.enigma.superwallet.dto.response.DefaultResponse;
+import com.enigma.superwallet.dto.response.ErrorResponse;
 import com.enigma.superwallet.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -53,42 +55,38 @@ public class CustomerController {
     }
 
     @PutMapping
-    public ResponseEntity<?> updateCustomer(@RequestParam MultipartFile image, @RequestParam  String id , @RequestParam String firstName , @RequestParam String lastName , @RequestParam String phoneNumber , @RequestParam String birthDate , @RequestParam Gender gender , @RequestParam String address , @RequestParam String email , @RequestParam String password) {
+    public ResponseEntity<?> updateCustomer(@RequestParam MultipartFile image, @RequestParam String id, @RequestParam String firstName, @RequestParam String lastName, @RequestParam String phoneNumber, @RequestParam String birthDate, @RequestParam Gender gender, @RequestParam String address, @RequestParam String email, @RequestParam String password) {
+        try {
+            RegisterRequest registerRequest = RegisterRequest.builder()
+                    .id(id)
+                    .firstName(firstName)
+                    .lastName(lastName)
+                    .phoneNumber(phoneNumber)
+                    .birthDate(birthDate)
+                    .gender(gender)
+                    .address(address)
+                    .email(email)
+                    .password(password)
+                    .profilePictureRequest(ProfilePictureRequest.builder()
+                            .image(image)
+                            .build())
+                    .build();
 
-        RegisterRequest registerRequest = RegisterRequest.builder()
-                .id(id)
-                .firstName(firstName)
-                .lastName(lastName)
-                .phoneNumber(phoneNumber)
-                .birthDate(birthDate)
-                .gender(gender)
-                .address(address)
-                .email(email)
-                .password(password)
-                .profilePictureRequest(ProfilePictureRequest.builder()
-                        .image(image)
-                        .build())
-                .build();
-
-        CustomerResponse customer = customerService.update(registerRequest);
-
-        if (registerRequest != null) {
+            CustomerResponse customer = customerService.update(registerRequest);
             return ResponseEntity.status(HttpStatus.OK)
                     .body(DefaultResponse.builder()
                             .statusCode(HttpStatus.OK.value())
                             .message("Update Success")
-//                            .data(registerRequest)
+                            .data(customer)
+                            .build());
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(ErrorResponse.builder()
+                            .statusCode(e.getStatusCode().value())
+                            .message("Update Failed")
                             .build());
         }
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(DefaultResponse.builder()
-                        .statusCode(HttpStatus.NOT_FOUND.value())
-                        .message("Update Failed")
-                        .data(customer)
-                        .build());
     }
-
 
 
     @DeleteMapping(value = "/{id}")
