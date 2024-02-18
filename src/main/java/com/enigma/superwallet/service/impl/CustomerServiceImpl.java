@@ -5,20 +5,37 @@ import com.enigma.superwallet.dto.response.CustomerResponse;
 import com.enigma.superwallet.dto.response.UserCredentialResponse;
 import com.enigma.superwallet.entity.Customer;
 import com.enigma.superwallet.entity.DummyBank;
+import com.enigma.superwallet.entity.ProfilePicture;
 import com.enigma.superwallet.entity.UserCredential;
 import com.enigma.superwallet.repository.CustomerRepository;
 import com.enigma.superwallet.repository.DummyBankRepository;
+import com.enigma.superwallet.repository.ProfileImageRepository;
 import com.enigma.superwallet.service.CustomerService;
 import com.enigma.superwallet.service.UserCredentialService;
+import com.google.auth.Credentials;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +45,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final UserCredentialService userCredentialService;
     private final PasswordEncoder passwordEncoder;
     private final DummyBankRepository dummyBankRepository;
+    private final ProfileImageRepository profileImageRepository;
 
 
     @Override
@@ -84,18 +102,30 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional(rollbackOn = Exception.class)
     @Override
     public CustomerResponse update(RegisterRequest registerRequest) {
-        Customer customer = customerRepository.findById(registerRequest.getId()).orElse(null);
-        if (customer != null) {
+        try {
+            Customer customer = customerRepository.findById(registerRequest.getId()).orElse(null);
             UserCredential userCredential = UserCredential.builder()
                     .id(customer.getUserCredential().getId())
-                    .createdAt(customer.getUserCredential().getCreatedAt())
+                    .createdAt(customer.getCreatedAt())
                     .updatedAt(LocalDateTime.now())
-                    .email(registerRequest.getEmail())
-                    .password(passwordEncoder.encode(registerRequest.getPassword()))
+                    .email(customer.getUserCredential().getEmail())
+                    .password(registerRequest.getPassword())
                     .role(customer.getUserCredential().getRole())
                     .build();
             userCredentialService.updateUserCredential(userCredential);
-            Customer updatedCustomer = Customer.builder()
+
+            //Save Image to Firebase and build to Profile Picture
+            String fileName = registerRequest.getProfilePictureRequest().getImage().getOriginalFilename();
+            fileName = UUID.randomUUID().toString().concat(this.getExtension(fileName));
+
+            File file = this.convertToFile(registerRequest.getProfilePictureRequest().getImage(), fileName);
+            String TEMP_URL = this.uploadFile(file, fileName);
+            file.delete();
+
+            ProfilePicture profilePicture = ProfilePicture.builder().name(TEMP_URL).uploadedAt(LocalDateTime.now()).build();
+            profileImageRepository.saveAndFlush(profilePicture);
+
+            Customer customer1 = Customer.builder()
                     .id(registerRequest.getId())
                     .createdAt(customer.getCreatedAt())
                     .updatedAt(LocalDateTime.now())
@@ -107,23 +137,30 @@ public class CustomerServiceImpl implements CustomerService {
                     .address(registerRequest.getAddress())
                     .isActive(customer.getIsActive())
                     .userCredential(userCredential)
+                    .profilePicture(profilePicture)
                     .build();
-            customerRepository.save(updatedCustomer);
+
+            customerRepository.save(customer1);
+
             return CustomerResponse.builder()
-                    .id(updatedCustomer.getId())
-                    .firstName(updatedCustomer.getFirstName())
-                    .lastName(updatedCustomer.getLastName())
-                    .phoneNumber(updatedCustomer.getPhoneNumber())
-                    .birthDate(updatedCustomer.getBirthDate())
-                    .gender(updatedCustomer.getGender())
-                    .address(updatedCustomer.getAddress())
+                    .firstName(customer1.getFirstName())
+                    .lastName(customer1.getLastName())
+                    .phoneNumber(customer1.getPhoneNumber())
+                    .birthDate(customer1.getBirthDate())
+                    .gender(customer1.getGender())
+                    .address(customer1.getAddress())
+                    .images(profilePicture.getName())
                     .userCredential(UserCredentialResponse.builder()
                             .email(userCredential.getEmail())
                             .role(userCredential.getRole().getRoleName())
                             .build())
                     .build();
+
+        }catch (Exception e) {
+            e.getMessage();
         }
         return null;
+
     }
 
     @Override
@@ -170,5 +207,27 @@ public class CustomerServiceImpl implements CustomerService {
 
         // Save the updated customer entity
         customerRepository.save(customer);
+    }
+
+    private String uploadFile(File file, String fileName) throws IOException {
+        BlobId blobId = BlobId.of("superwallet-83957.appspot.com", fileName);
+        BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType("media").build();
+        Credentials credentials = GoogleCredentials.fromStream(new FileInputStream("/home/user/Batch14/finalProject/SuperWallet/v5/super-wallet-backend/src/main/resources/superwallet-83957-firebase-adminsdk-v86yl-1c4cfaf2ed.json"));
+        Storage storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
+        storage.create(blobInfo, Files.readAllBytes(file.toPath()));
+        return String.format("https://firebasestorage.googleapis.com/v0/b/superwallet-83957.appspot.com/o/%s?alt=media", URLEncoder.encode(fileName, StandardCharsets.UTF_8));
+    }
+
+    private File convertToFile(MultipartFile multipartFile, String fileName) throws IOException {
+        File tempFile = new File(fileName);
+        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+            fos.write(multipartFile.getBytes());
+            fos.close();
+        }
+        return tempFile;
+    }
+
+    private String getExtension(String fileName) {
+        return fileName.substring(fileName.lastIndexOf("."));
     }
 }

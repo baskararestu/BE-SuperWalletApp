@@ -20,4 +20,5 @@ public class RegisterRequest {
     private String address;
     private String email;
     private String password;
+    private ProfilePictureRequest profilePictureRequest;
 }
