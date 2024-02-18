@@ -46,12 +46,15 @@ public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
     private final UserCredentialService userCredentialService;
-    private final PasswordEncoder passwordEncoder;
     private final DummyBankRepository dummyBankRepository;
     private final ProfileImageRepository profileImageRepository;
 
     @Value("${app.super_wallet.path.firebaseUrl}")
-    String firebaseJson;
+    private String firebaseJson;
+    @Value("${app.super_wallet.firebase.bucketName}")
+    private String bucketName;
+    @Value("${app.super_wallet.firebase.downloadUrl}")
+    private String DOWNLOAD_URL;
 
     @Override
     public CustomerResponse createCustomer(Customer customer) {
@@ -161,8 +164,8 @@ public class CustomerServiceImpl implements CustomerService {
                             .build())
                     .build();
 
-        }catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,e.getMessage());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
@@ -213,12 +216,12 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     private String uploadFile(File file, String fileName) throws IOException {
-        BlobId blobId = BlobId.of("superwallet-83957.appspot.com", fileName);
+        BlobId blobId = BlobId.of(bucketName, fileName);
         BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType("media").build();
         Credentials credentials = GoogleCredentials.fromStream(new FileInputStream(firebaseJson));
         Storage storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
         storage.create(blobInfo, Files.readAllBytes(file.toPath()));
-        return String.format("https://firebasestorage.googleapis.com/v0/b/superwallet-83957.appspot.com/o/%s?alt=media", URLEncoder.encode(fileName, StandardCharsets.UTF_8));
+        return String.format(DOWNLOAD_URL, URLEncoder.encode(fileName, StandardCharsets.UTF_8));
     }
 
     private File convertToFile(MultipartFile multipartFile, String fileName) throws IOException {
