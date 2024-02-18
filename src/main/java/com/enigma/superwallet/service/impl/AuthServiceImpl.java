@@ -101,7 +101,7 @@ public class AuthServiceImpl implements AuthService {
             userCredentialRepository.saveAndFlush(userCredential);
             Customer customer = mapToCustomer(userCredential, registerRequest);
             customerService.createCustomer(customer);
-            accountService.createDefaultAccount(customer.getId());
+            accountService.createAccount(customer.getId());
             return mapToRegisterCustomer(userCredential, registerRequest);
         } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "User Already Exist");

@@ -16,7 +16,7 @@ public class TransferHistoryResponse {
     private TransferHistoryDetailsResponse source;
     private TransferHistoryDetailsResponse destination;
     private String totalAmount;
-    private LocalDateTime date;
+    private String date;
     private String transactionType;
     private BigDecimal totalFee;
     private String withdrawalCode;
