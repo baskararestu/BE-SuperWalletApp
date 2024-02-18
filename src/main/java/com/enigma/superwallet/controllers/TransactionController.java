@@ -7,13 +7,13 @@ import com.enigma.superwallet.dto.request.WithdrawalRequest;
 import com.enigma.superwallet.dto.response.*;
 import com.enigma.superwallet.service.TransactionsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -74,6 +74,40 @@ public class TransactionController {
                     .body(DefaultResponse.builder()
                             .statusCode(e.getStatusCode().value())
                             .message(e.getReason())
+                            .build());
+        }
+    }
+
+@GetMapping
+public ResponseEntity<?>getTransactionsHistory(
+        @RequestParam(name = "name",required = false) String name,
+        @RequestParam(name = "type",required = false) String type,
+        @RequestParam(name = "fromDate",required = false) Long fromDate,
+        @RequestParam(name = "toDate",required = false) Long toDate,
+        @RequestParam(name = "page", required = false, defaultValue = "0") Integer page,
+        @RequestParam(name = "size", required = false, defaultValue = "5") Integer size
+){
+        try {
+            Page<TransferHistoryResponse> dataResponse = transactionsService.getTransferHistoriesPaging(name, type, fromDate, toDate, page, size);
+            PagingResponse pagingResponse = new PagingResponse();
+
+            pagingResponse.setCurrentPage(dataResponse.getNumber());
+            pagingResponse.setTotalPage(dataResponse.getTotalPages());
+            pagingResponse.setSize(dataResponse.getSize());
+            pagingResponse.setTotalItem(dataResponse.getTotalElements());
+
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(CommonResponse.builder()
+                            .statusCode(HttpStatus.OK.value())
+                            .message("Successfully getting data")
+                            .data(dataResponse.getContent())
+                            .pagingResponse(pagingResponse)
+                            .build());
+        } catch (ResponseStatusException e){
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(ErrorResponse.builder()
+                            .statusCode(e.getStatusCode().value())
+                            .message(e.getMessage())
                             .build());
         }
     }

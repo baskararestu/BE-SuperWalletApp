@@ -19,7 +19,7 @@ public class TransactionHistory {
     private String id;
 
     @Column(name = "transaction_date", nullable = false)
-    private LocalDateTime transactionDate;
+    private Long transactionDate;
 
     @ManyToOne
     @JoinColumn(name = "source_account_id", nullable = false)

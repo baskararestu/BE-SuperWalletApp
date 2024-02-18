@@ -10,13 +10,13 @@ import com.enigma.superwallet.entity.TransactionHistory;
 import com.enigma.superwallet.entity.TransactionType;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public class TransactionsMapper {
 
     public static TransactionHistory mapToTransactionHistory(double amount, AccountResponse sender, AccountResponse receiver, TransactionType type, String withdrawalCode, double fee) {
         return TransactionHistory.builder()
-                .transactionDate(LocalDateTime.now())
+                .transactionDate(Instant.now().toEpochMilli())
                 .sourceAccount(mapToAccount(sender))
                 .destinationAccount(mapToAccount(receiver))
                 .amount(amount)
@@ -28,7 +28,7 @@ public class TransactionsMapper {
 
     public static TransactionHistory mapToTransactionHistory(double amount, AccountResponse account, TransactionType type, String withdrawalCode, double fee) {
         return TransactionHistory.builder()
-                .transactionDate(LocalDateTime.now())
+                .transactionDate(Instant.now().toEpochMilli())
                 .sourceAccount(mapToAccount(account))
                 .destinationAccount(mapToAccount(account))
                 .amount(amount)

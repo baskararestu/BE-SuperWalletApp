@@ -6,13 +6,18 @@ import com.enigma.superwallet.dto.request.DepositRequest;
 import com.enigma.superwallet.dto.request.TransferRequest;
 import com.enigma.superwallet.dto.request.WithdrawalRequest;
 import com.enigma.superwallet.dto.response.*;
+import com.enigma.superwallet.entity.Account;
 import com.enigma.superwallet.entity.TransactionHistory;
 import com.enigma.superwallet.entity.TransactionType;
 import com.enigma.superwallet.repository.TransactionRepositroy;
 import com.enigma.superwallet.security.JwtUtil;
 import com.enigma.superwallet.service.*;
 import com.enigma.superwallet.util.ValidationUtil;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,13 +25,19 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.enigma.superwallet.mapper.TransactionsMapper.*;
 import static com.enigma.superwallet.util.WithdrawalCodeGenerator.generateUniqueWithdrawalCode;
 
 @Service
 @RequiredArgsConstructor
-public class TransactionServiceImpl implements TransactionsService {
+public  class TransactionServiceImpl implements TransactionsService {
 
     private final AccountService accountService;
     private final CustomerService customerService;
@@ -192,5 +203,61 @@ public class TransactionServiceImpl implements TransactionsService {
         transactionRepositroy.saveAndFlush(transactionHistory);
 
         return mapToWithdrawalResponse(transactionHistory, withdrawalCode);
+    }
+
+    @Override
+    public Page<TransferHistoryResponse> getTransferHistoriesPaging(String name, String type, Long fromDate, Long toDate, Integer page, Integer size) {
+        Page<TransactionHistory> pageResult = transactionRepositroy.findAll(transactionSpecification(name, type, fromDate, toDate), PageRequest.of(page, size));
+        return pageResult.map(this::mapToTransferHistoryResponse);
+    }
+
+
+
+    private Specification<TransactionHistory> transactionSpecification(String name, String type, Long fromDate, Long toDate) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (name != null && !name.isEmpty()) {
+                predicates.add(criteriaBuilder.like(root.get("sourceAccount").get("customer").get("firstName"), "%" + name + "%"));
+            }
+            if (type != null && !type.isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("transactionType").get("type"), type));
+            }
+            if (fromDate != null) {
+                LocalDateTime fromDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(fromDate), ZoneId.systemDefault());
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("transactionDate"), fromDateTime));
+            }
+            if (toDate != null) {
+                LocalDateTime toDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(toDate), ZoneId.systemDefault());
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("transactionDate"), toDateTime));
+            }
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    private TransferHistoryResponse mapToTransferHistoryResponse(TransactionHistory transactionHistory) {
+        LocalDateTime transactionDate =
+                LocalDateTime.ofInstant(Instant.ofEpochMilli
+                        (transactionHistory.getTransactionDate()), ZoneId.systemDefault());
+
+        return TransferHistoryResponse.builder()
+                .source(mapToAccountResponse(transactionHistory.getSourceAccount()))
+                .destination(mapToAccountResponse(transactionHistory.getDestinationAccount()))
+                .totalAmount(transactionHistory.getAmount().toString())
+                .date(transactionDate)
+                .withdrawalCode(transactionHistory.getWithdrawalCode())
+                .build();
+    }
+
+    private AccountResponse mapToAccountResponse(Account account) {
+        if (account == null) {
+            return null;
+        }
+        return AccountResponse.builder()
+                .id(account.getId())
+                .customer(account.getCustomer())
+                .accountNumber(account.getAccountNumber())
+                .currency(account.getCurrency())
+                .balance(account.getBalance())
+                .build();
     }
 }
