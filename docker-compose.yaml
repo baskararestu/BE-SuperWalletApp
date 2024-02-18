@@ -1,0 +1,35 @@
+version: '3'
+services:
+
+  postgresql:
+    image: postgres
+    container_name: postgresql
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgresql-data:/var/lib/postgresql/data
+
+  super-wallet-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: super-wallet-app
+    ports:
+      - "${PORT}:8088"
+    environment:
+      - DB_HOST=postgresql
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - FIREBASE_BUCKETNAME=${FIREBASE_BUCKETNAME}
+      - FIREBASE_JSON_PATH=${FIREBASE_JSON_PATH}
+      - PORT=${PORT}
+    depends_on:
+      - postgresql
+
+volumes:
+  postgresql-data:
