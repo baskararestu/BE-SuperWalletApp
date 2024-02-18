@@ -9,4 +9,5 @@ public class AppPath {
     public final static String DUMMY_BANK="/api/dummy-bank";
     public final static String TRANS = "/api/transactions";
     public final static String CURRENCY="/api/currency";
+    public final static String PASSWORD="/api/reset-password";
 }

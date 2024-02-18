@@ -1,7 +1,5 @@
-package com.enigma.superwallet.dto.response;
+package com.enigma.superwallet.dto.request;
 
-import com.enigma.superwallet.constant.ERole;
-import com.enigma.superwallet.entity.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,12 +9,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)
-public class AdminResponse {
+public class AdminRequest {
     private String id;
     private String fullName;
-    private String email;
     private String address;
     private String phoneNumber;
-    private ERole role;
+    private String email;
+    private String password;
 }
-

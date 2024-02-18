@@ -83,8 +83,8 @@ public class AccountServiceImpl implements AccountService {
                     .build();
             accountRepository.save(account);
             return AccountResponse.builder()
-                    .firstName(account.getCustomer().getFirstName())
-                    .lastName(account.getCustomer().getLastName())
+                    .id(account.getId())
+                    .customer(account.getCustomer())
                     .accountNumber(account.getAccountNumber())
                     .currency(account.getCurrency())
                     .balance(account.getBalance())
@@ -98,8 +98,8 @@ public class AccountServiceImpl implements AccountService {
     public List<AccountResponse> getAllAccount() {
         return accountRepository.findAll().stream().map(account -> AccountResponse
                 .builder()
-                .firstName(account.getCustomer().getFirstName())
-                .lastName(account.getCustomer().getLastName())
+                .id(account.getId())
+                .customer(account.getCustomer())
                 .accountNumber(account.getAccountNumber())
                 .balance(account.getBalance())
                 .currency(account.getCurrency())
@@ -112,8 +112,9 @@ public class AccountServiceImpl implements AccountService {
         if (account != null) {
             return AccountResponse.builder()
                     .id(account.getId())
-                    .firstName(account.getCustomer().getFirstName())
-                    .lastName(account.getCustomer().getLastName())
+//                    .firstName(account.getCustomer().getFirstName())
+//                    .lastName(account.getCustomer().getLastName())
+                    .customer(account.getCustomer())
                     .accountNumber(account.getAccountNumber())
                     .currency(account.getCurrency())
                     .balance(account.getBalance())
@@ -165,8 +166,10 @@ public class AccountServiceImpl implements AccountService {
                     .build();
             accountRepository.save(account);
             return AccountResponse.builder()
-                    .firstName(account.getCustomer().getFirstName())
-                    .lastName(account.getCustomer().getLastName())
+                    .id(account.getId())
+//                    .firstName(account.getCustomer().getFirstName())
+//                    .lastName(account.getCustomer().getLastName())
+                    .customer(account.getCustomer())
                     .accountNumber(account.getAccountNumber())
                     .currency(account.getCurrency())
                     .balance(account.getBalance())
@@ -180,8 +183,10 @@ public class AccountServiceImpl implements AccountService {
     public AccountResponse findAccountByCustomerIdAndPin(String userId, String pin) {
         return accountRepository.findAccountByCustomerIdAndPin(userId, pin)
                 .map(account -> AccountResponse.builder()
-                        .firstName(account.getCustomer().getFirstName())
-                        .lastName(account.getCustomer().getLastName())
+                        .id(account.getId())
+//                        .firstName(account.getCustomer().getFirstName())
+//                        .lastName(account.getCustomer().getLastName())
+                        .customer(account.getCustomer())
                         .accountNumber(account.getAccountNumber())
                         .currency(account.getCurrency())
                         .balance(account.getBalance())
@@ -200,8 +205,10 @@ public class AccountServiceImpl implements AccountService {
                 account.setBalance(amount);
 
                 return AccountResponse.builder()
-                        .firstName(account.getCustomer().getFirstName())
-                        .lastName(account.getCustomer().getLastName())
+                        .id(account.getId())
+//                        .firstName(account.getCustomer().getFirstName())
+//                        .lastName(account.getCustomer().getLastName())
+                        .customer(account.getCustomer())
                         .accountNumber(account.getAccountNumber())
                         .currency(account.getCurrency())
                         .balance(account.getBalance())
@@ -227,8 +234,10 @@ public class AccountServiceImpl implements AccountService {
                     Double updatedBalance = oldBalance + newBalance;
                     account.setBalance(updatedBalance);
                     return AccountResponse.builder()
-                            .firstName(account.getCustomer().getFirstName())
-                            .lastName(account.getCustomer().getLastName())
+                            .id(account.getId())
+//                            .firstName(account.getCustomer().getFirstName())
+//                            .lastName(account.getCustomer().getLastName())
+                            .customer(account.getCustomer())
                             .accountNumber(account.getAccountNumber())
                             .currency(account.getCurrency())
                             .balance(account.getBalance())
@@ -255,8 +264,9 @@ public class AccountServiceImpl implements AccountService {
 
         return AccountResponse.builder()
                 .id(dataAccount.getId())
-                .firstName(dataAccount.getCustomer().getFirstName())
-                .lastName(dataAccount.getCustomer().getLastName())
+//                .firstName(dataAccount.getCustomer().getFirstName())
+//                .lastName(dataAccount.getCustomer().getLastName())
+                .customer(dataAccount.getCustomer())
                 .accountNumber(dataAccount.getAccountNumber())
                 .currency(dataAccount.getCurrency())
                 .balance(dataAccount.getBalance())

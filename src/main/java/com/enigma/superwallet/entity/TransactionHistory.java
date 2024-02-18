@@ -19,7 +19,7 @@ public class TransactionHistory {
     private String id;
 
     @Column(name = "transaction_date", nullable = false)
-    private LocalDateTime transactionDate;
+    private Long transactionDate;
 
     @ManyToOne
     @JoinColumn(name = "source_account_id", nullable = false)
@@ -36,6 +36,9 @@ public class TransactionHistory {
     @JoinColumn(name = "transaction_type_id")
     private TransactionType transactionType;
 
-    @Column(nullable = false, columnDefinition = "DOUBLE PRECISION CHECK (fee > 0)")
+    @Column(nullable = false, columnDefinition = "DOUBLE PRECISION CHECK (fee >= 0)")
     private Double fee;
+
+    @Column(name = "withdrawal_code", columnDefinition = "VARCHAR(255) DEFAULT ''")
+    private String withdrawalCode;
 }

@@ -9,13 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)
-public class TransferResponse {
-    private String from;
-    private String fromNumber;
-    private String fromCurrency;
-    private String to;
-    private String toNumber;
-    private String toCurrency;
+public class WithdrawalResponse {
+    private String transactionId;
+    private String withdrawalCode;
     private String totalAmount;
-    private String fee;
 }

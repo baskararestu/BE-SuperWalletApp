@@ -9,8 +9,6 @@ import com.enigma.superwallet.repository.CurrencyHistoryRepository;
 import com.enigma.superwallet.service.CurrencyHistoryService;
 import com.enigma.superwallet.service.CurrencyService;
 import com.enigma.superwallet.util.ValidationUtil;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -18,7 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.sql.Timestamp;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -28,7 +28,6 @@ public class CurrencyHistoryServiceImpl implements CurrencyHistoryService {
     private final CurrencyHistoryRepository currencyHistoryRepository;
     private final CurrencyService currencyService;
     private final ValidationUtil validationUtil;
-    private final EntityManager entityManager;
 
     @Value("${exchange.api.url}")
     private String apiUrl;
@@ -66,7 +65,7 @@ public class CurrencyHistoryServiceImpl implements CurrencyHistoryService {
                     .orElseThrow(() -> new IllegalStateException("Currency not found"));
 
             CurrencyHistory existingCurrencyHistory = currencyHistoryRepository
-                    .findFirstByDateAndBaseAndCurrency(time, baseCurrency, currency);
+                    .findByDateAndBaseAndCurrency(time, baseCurrency, currency);
 
             if (existingCurrencyHistory != null && baseCurrency.equals(currencyCode.name())) {
                 existingCurrencyHistory.setRate(Objects.requireNonNull(conversionRates).get(currencyCode.name()));
@@ -119,13 +118,8 @@ public class CurrencyHistoryServiceImpl implements CurrencyHistoryService {
         }
 
         Optional<Currency> dataTargetCurrency = currencyService.getOrSaveCurrency(targetCurrencyData);
-//        String queryStr = "SELECT * FROM m_currency_history WHERE date = :time AND base = :baseCurrency AND currency_id = :currencyId";
-//        Query query = entityManager.createNativeQuery(queryStr, CurrencyHistory.class);
-//        query.setParameter("time", time);
-//        query.setParameter("baseCurrency", baseCurrency);
-//        query.setParameter("currencyId", dataTargetCurrency.get().getId());
-//        CurrencyHistory currencyHistory = (CurrencyHistory) query.getResultList();
-        CurrencyHistory currencyHistory = currencyHistoryRepository.findFirstByDateAndBaseAndCurrency(time, baseCurrency, dataTargetCurrency.orElse(null));
+
+        CurrencyHistory currencyHistory = currencyHistoryRepository.findByDateAndBaseAndCurrency(time, baseCurrency, dataTargetCurrency.orElse(null));
 
 
         if (currencyHistory != null) {
