@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -12,9 +13,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder(toBuilder = true)
 public class TransferHistoryResponse {
-    private AccountResponse source;
-    private AccountResponse destination;
+    private TransferHistoryDetailsResponse source;
+    private TransferHistoryDetailsResponse destination;
     private String totalAmount;
     private LocalDateTime date;
+    private String transactionType;
+    private BigDecimal totalFee;
     private String withdrawalCode;
 }

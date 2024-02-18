@@ -240,24 +240,26 @@ public  class TransactionServiceImpl implements TransactionsService {
                         (transactionHistory.getTransactionDate()), ZoneId.systemDefault());
 
         return TransferHistoryResponse.builder()
-                .source(mapToAccountResponse(transactionHistory.getSourceAccount()))
-                .destination(mapToAccountResponse(transactionHistory.getDestinationAccount()))
+                .source(mapToTransferHistoryDetailsResponse(transactionHistory.getSourceAccount()))
+                .destination(mapToTransferHistoryDetailsResponse(transactionHistory.getDestinationAccount()))
+                .transactionType(transactionHistory.getTransactionType().getTransactionType().name())
                 .totalAmount(transactionHistory.getAmount().toString())
+                .totalFee(BigDecimal.valueOf(transactionHistory.getFee()))
                 .date(transactionDate)
                 .withdrawalCode(transactionHistory.getWithdrawalCode())
                 .build();
     }
 
-    private AccountResponse mapToAccountResponse(Account account) {
+    private TransferHistoryDetailsResponse mapToTransferHistoryDetailsResponse(Account account) {
         if (account == null) {
             return null;
         }
-        return AccountResponse.builder()
-                .id(account.getId())
-                .customer(account.getCustomer())
+        return TransferHistoryDetailsResponse.builder()
+                .firstName(account.getCustomer().getFirstName())
+                .lastName(account.getCustomer().getLastName())
                 .accountNumber(account.getAccountNumber())
-                .currency(account.getCurrency())
-                .balance(account.getBalance())
+                .currencyCode(account.getCurrency().getCode().toString())
+                .currencyName(account.getCurrency().getName())
                 .build();
     }
 }
