@@ -13,6 +13,7 @@ import com.enigma.superwallet.repository.TransactionRepositroy;
 import com.enigma.superwallet.security.JwtUtil;
 import com.enigma.superwallet.service.*;
 import com.enigma.superwallet.util.ValidationUtil;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,6 +29,8 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,7 +40,7 @@ import static com.enigma.superwallet.util.WithdrawalCodeGenerator.generateUnique
 
 @Service
 @RequiredArgsConstructor
-public  class TransactionServiceImpl implements TransactionsService {
+public class TransactionServiceImpl implements TransactionsService {
 
     private final AccountService accountService;
     private final CustomerService customerService;
@@ -67,13 +70,11 @@ public  class TransactionServiceImpl implements TransactionsService {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deposit can only be made by the account owner");
             }
 
-            String dummyBankId = depositRequest.getDummyBankId();
+            String dummyBankId = customerResponse.getBankData().getId();
             double amount = depositRequest.getAmount();
             return getDeposit(depositRequest, dummyBankId, amount, account);
         } catch (ResponseStatusException e) {
             throw e;
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An internal server error occurred", e);
         }
     }
 
@@ -108,6 +109,12 @@ public  class TransactionServiceImpl implements TransactionsService {
     public TransferResponse transferBetweenAccount(TransferRequest request) {
         AccountResponse sender = accountService.getByAccountNumber(request.getFromNumber());
         AccountResponse receiver = accountService.getByAccountNumber(request.getToNumber());
+        String token = util.extractTokenFromHeader();
+
+        String customerId = jwtUtil.getUserInfoByToken(token).get("customerId");
+        if(!customerId.equals(sender.getCustomer().getId()))
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"Invalid process");
+
         if (sender == null || receiver == null)
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Data Account not found");
 
@@ -165,7 +172,7 @@ public  class TransactionServiceImpl implements TransactionsService {
 
         TransactionHistory transactionHistory = mapToTransactionHistory
                 (request.getAmountTransfer(), sender, receiver, transactionType, "",
-                totalFee.doubleValue());
+                        totalFee.doubleValue());
         transactionRepositroy.saveAndFlush(transactionHistory);
 
         return mapToTransferResponse(sender, receiver, formattedAmount, totalFee);
@@ -185,8 +192,8 @@ public  class TransactionServiceImpl implements TransactionsService {
         if (account.getBalance() < request.getAmount())
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Insufficient balance");
 
-        if(!customer.getId().equals(customerId))
-            throw new ResponseStatusException(HttpStatus.CONFLICT,"Invalid withdraw");
+        if (!customer.getId().equals(customerId))
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Invalid withdraw");
 
         String withdrawalCode = generateUniqueWithdrawalCode();
 
@@ -212,13 +219,33 @@ public  class TransactionServiceImpl implements TransactionsService {
     }
 
 
-
     private Specification<TransactionHistory> transactionSpecification(String name, String type, Long fromDate, Long toDate) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (name != null && !name.isEmpty()) {
-                predicates.add(criteriaBuilder.like(root.get("sourceAccount").get("customer").get("firstName"), "%" + name + "%"));
+                String fullNamePattern = "%" + name + "%";
+
+                Expression<String> sourceFirstName = root.get("sourceAccount").get("customer").get("firstName");
+                Expression<String> sourceLastName = root.get("sourceAccount").get("customer").get("lastName");
+
+                Expression<String> destinationFirstName = root.get("destinationAccount").get("customer").get("firstName");
+                Expression<String> destinationLastName = root.get("destinationAccount").get("customer").get("lastName");
+
+                Expression<String> sourceFullName = criteriaBuilder.concat(
+                        criteriaBuilder.concat(sourceFirstName, " "), sourceLastName
+                );
+                Expression<String> destinationFullName = criteriaBuilder.concat(
+                        criteriaBuilder.concat(destinationFirstName, " "), destinationLastName
+                );
+
+                Predicate sourceFullNamePredicate = criteriaBuilder.like(sourceFullName, fullNamePattern);
+
+                Predicate destinationFullNamePredicate = criteriaBuilder.like(destinationFullName, fullNamePattern);
+
+                predicates.add(criteriaBuilder.or(sourceFullNamePredicate, destinationFullNamePredicate));
             }
+
+
             if (type != null && !type.isEmpty()) {
                 predicates.add(criteriaBuilder.equal(root.get("transactionType").get("type"), type));
             }
@@ -235,17 +262,15 @@ public  class TransactionServiceImpl implements TransactionsService {
     }
 
     private TransferHistoryResponse mapToTransferHistoryResponse(TransactionHistory transactionHistory) {
-        LocalDateTime transactionDate =
-                LocalDateTime.ofInstant(Instant.ofEpochMilli
-                        (transactionHistory.getTransactionDate()), ZoneId.systemDefault());
-
+        ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(java.time.Instant.ofEpochMilli(transactionHistory.getTransactionDate()), ZoneId.systemDefault());
+        String date = zonedDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         return TransferHistoryResponse.builder()
                 .source(mapToTransferHistoryDetailsResponse(transactionHistory.getSourceAccount()))
                 .destination(mapToTransferHistoryDetailsResponse(transactionHistory.getDestinationAccount()))
                 .transactionType(transactionHistory.getTransactionType().getTransactionType().name())
                 .totalAmount(transactionHistory.getAmount().toString())
                 .totalFee(BigDecimal.valueOf(transactionHistory.getFee()))
-                .date(transactionDate)
+                .date(date)
                 .withdrawalCode(transactionHistory.getWithdrawalCode())
                 .build();
     }

@@ -33,12 +33,8 @@ public class AuthResponseMapper {
                 .build();
     }
 
-    public static LoginResponse mapToLoginResponse(Optional<Customer> customerOpt, ERole role, String token) {
-        Customer customer = customerOpt.orElseThrow(() -> new IllegalArgumentException("Customer not found"));
+    public static LoginResponse mapToLoginResponse(ERole role, String token) {
         return LoginResponse.builder()
-                .email(customer.getUserCredential().getEmail())
-                .firstName(customer.getFirstName())
-                .lastName(customer.getLastName())
                 .token(token)
                 .role(role.name())
                 .build();

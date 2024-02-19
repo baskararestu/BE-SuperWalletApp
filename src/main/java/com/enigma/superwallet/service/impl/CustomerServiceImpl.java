@@ -1,6 +1,7 @@
 package com.enigma.superwallet.service.impl;
 
 import com.enigma.superwallet.dto.request.RegisterRequest;
+import com.enigma.superwallet.dto.request.UpdateRequest;
 import com.enigma.superwallet.dto.response.CustomerResponse;
 import com.enigma.superwallet.dto.response.UserCredentialResponse;
 import com.enigma.superwallet.entity.Customer;
@@ -48,6 +49,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final UserCredentialService userCredentialService;
     private final DummyBankRepository dummyBankRepository;
     private final ProfileImageRepository profileImageRepository;
+    private File file;
 
     @Value("${app.super_wallet.path.firebaseUrl}")
     private String firebaseJson;
@@ -102,6 +104,7 @@ public class CustomerServiceImpl implements CustomerService {
                             .email(customer.getUserCredential().getEmail())
                             .role(customer.getUserCredential().getRole().getRoleName())
                             .build())
+                    .bankData(customer.getDummyBank())
                     .build();
         }
         return null;
@@ -109,24 +112,14 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Transactional(rollbackOn = Exception.class)
     @Override
-    public CustomerResponse update(RegisterRequest registerRequest) {
+    public CustomerResponse update(UpdateRequest updateRequest) {
         try {
-            Customer customer = customerRepository.findById(registerRequest.getId()).orElse(null);
-            UserCredential userCredential = UserCredential.builder()
-                    .id(customer.getUserCredential().getId())
-                    .createdAt(customer.getCreatedAt())
-                    .updatedAt(LocalDateTime.now())
-                    .email(customer.getUserCredential().getEmail())
-                    .password(registerRequest.getPassword())
-                    .role(customer.getUserCredential().getRole())
-                    .build();
-            userCredentialService.updateUserCredential(userCredential);
+            Customer customer = customerRepository.findById(updateRequest.getId()).orElse(null);
 
-            //Save Image to Firebase and build to Profile Picture
-            String fileName = registerRequest.getProfilePictureRequest().getImage().getOriginalFilename();
+            String fileName = updateRequest.getProfilePictureRequest().getImage().getOriginalFilename();
             fileName = UUID.randomUUID().toString().concat(this.getExtension(fileName));
 
-            File file = this.convertToFile(registerRequest.getProfilePictureRequest().getImage(), fileName);
+            file = this.convertToFile(updateRequest.getProfilePictureRequest().getImage(), fileName);
             String TEMP_URL = this.uploadFile(file, fileName);
             file.delete();
 
@@ -134,17 +127,17 @@ public class CustomerServiceImpl implements CustomerService {
             profileImageRepository.saveAndFlush(profilePicture);
 
             Customer customer1 = Customer.builder()
-                    .id(registerRequest.getId())
+                    .id(updateRequest.getId())
                     .createdAt(customer.getCreatedAt())
                     .updatedAt(LocalDateTime.now())
-                    .firstName(registerRequest.getFirstName())
-                    .lastName(registerRequest.getLastName())
-                    .phoneNumber(registerRequest.getPhoneNumber())
-                    .birthDate(LocalDate.parse(registerRequest.getBirthDate()))
-                    .gender(registerRequest.getGender())
-                    .address(registerRequest.getAddress())
+                    .firstName(updateRequest.getFirstName())
+                    .lastName(updateRequest.getLastName())
+                    .phoneNumber(updateRequest.getPhoneNumber())
+                    .birthDate(LocalDate.parse(updateRequest.getBirthDate()))
+                    .gender(updateRequest.getGender())
+                    .address(updateRequest.getAddress())
+                    .userCredential(customer.getUserCredential())
                     .isActive(customer.getIsActive())
-                    .userCredential(userCredential)
                     .profilePicture(profilePicture)
                     .build();
 
@@ -158,13 +151,10 @@ public class CustomerServiceImpl implements CustomerService {
                     .gender(customer1.getGender())
                     .address(customer1.getAddress())
                     .images(profilePicture.getName())
-                    .userCredential(UserCredentialResponse.builder()
-                            .email(userCredential.getEmail())
-                            .role(userCredential.getRole().getRoleName())
-                            .build())
                     .build();
 
         } catch (Exception e) {
+            file.delete();
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }

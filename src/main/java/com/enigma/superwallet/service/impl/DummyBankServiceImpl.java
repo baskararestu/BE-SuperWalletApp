@@ -36,10 +36,11 @@ public class DummyBankServiceImpl implements DummyBankService {
             String customerId = jwtUtil.getUserInfoByToken(token).get("userId");
             System.out.println(customerId);
 
+            Double dummyBalance = 10000000.0;
             DummyBank dummyBank = DummyBank.builder()
                     .bankNumber(dummyBankRequest.getBankNumber())
                     .cvv(dummyBankRequest.getCvv())
-                    .balance(dummyBankRequest.getBalance())
+                    .balance(dummyBalance)
                     .build();
 
             dummyBank = dummyBankRepo.save(dummyBank);

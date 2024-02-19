@@ -25,19 +25,12 @@ public class Account {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-//    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-//    @JoinTable(name = "m_account_currency",
-//            joinColumns = {@JoinColumn(name = "account_id")},
-//            inverseJoinColumns = {@JoinColumn(name = "currency_id")})
     @ManyToOne
     @JoinColumn(name = "currency_id")
     private Currency currency;
 
     @Column(name = "account_number", nullable = false, unique = true)
     private String accountNumber;
-
-    @Column
-    private String pin;
 
     @Column(columnDefinition =  "DOUBLE PRECISION CHECK (balance >= 0)")
     private Double balance;

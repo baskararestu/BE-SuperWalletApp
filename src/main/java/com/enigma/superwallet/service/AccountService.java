@@ -6,11 +6,9 @@ import com.enigma.superwallet.dto.response.AccountResponse;
 import java.util.List;
 
 public interface AccountService {
-    AccountResponse createAccount(AccountRequest accountRequest);
+    void createAccount(String customerId);
     List<AccountResponse> getAllAccount();
     AccountResponse getById(String id);
-    AccountResponse createDefaultAccount(String customerId);
-    AccountResponse findAccountByCustomerIdAndPin(String userId, String pin);
     AccountResponse updateAccountBalance(String accountId, Double amount);
     AccountResponse updateIdrAccountBalance(String accountId,Double newBalance);
 

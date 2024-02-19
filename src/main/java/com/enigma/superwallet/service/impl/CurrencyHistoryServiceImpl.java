@@ -11,6 +11,7 @@ import com.enigma.superwallet.service.CurrencyService;
 import com.enigma.superwallet.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -127,5 +128,10 @@ public class CurrencyHistoryServiceImpl implements CurrencyHistoryService {
         } else {
             throw new RuntimeException("Currency rate not found");
         }
+    }
+
+    @Override
+    public Page<CurrencyHistoryResponse> getCurrencies(String name, String type, Long date, Integer page, Integer size) {
+        return null;
     }
 }
