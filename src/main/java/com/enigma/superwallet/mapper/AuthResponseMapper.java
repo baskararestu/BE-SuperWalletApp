@@ -33,8 +33,9 @@ public class AuthResponseMapper {
                 .build();
     }
 
-    public static LoginResponse mapToLoginResponse(ERole role, String token) {
+    public static LoginResponse mapToLoginResponse(ERole role, String token,String customerId) {
         return LoginResponse.builder()
+                .customerId(customerId)
                 .token(token)
                 .role(role.name())
                 .build();

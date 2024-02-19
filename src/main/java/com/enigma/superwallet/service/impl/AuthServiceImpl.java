@@ -117,7 +117,8 @@ public class AuthServiceImpl implements AuthService {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             AppUser appUser = (AppUser) authentication.getPrincipal();
             String token = jwtUtil.generateToken(appUser);
-            return mapToLoginResponse(appUser.getRole(), token);
+           Optional<Customer> customerData= customerService.getCustomerByUserCredentialId(appUser.getId());
+            return mapToLoginResponse(appUser.getRole(), token,customerData.get().getId());
         } catch (BadCredentialsException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Invalid email or password", e);
         } catch (Exception e) {

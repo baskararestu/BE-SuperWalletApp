@@ -8,7 +8,7 @@ services:
       - POSTGRES_PASSWORD=root
       - POSTGRES_DB=db_super_wallet
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
       - postgresql-data:/var/lib/postgresql/data
 
@@ -18,7 +18,7 @@ services:
       dockerfile: Dockerfile
     container_name: super-wallet-app
     ports:
-      - "4000"
+      - "4000:4000"
     environment:
       - DB_HOST=postgresql
       - DB_PORT=5432
@@ -26,7 +26,7 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=root
       - FIREBASE_BUCKETNAME=super-wallet-app-71352.appspot.com
-      - FIREBASE_JSON_PATH=target/super-wallet-0.0.1-SNAPSHOT.jar
+      - FIREBASE_JSON_PATH=/app/target/super-wallet-0.0.1-SNAPSHOT.jar
       - PORT=4000
     depends_on:
       - postgresql
