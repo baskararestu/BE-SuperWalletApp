@@ -46,7 +46,6 @@ import java.util.UUID;
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
-    private final UserCredentialService userCredentialService;
     private final DummyBankRepository dummyBankRepository;
     private final ProfileImageRepository profileImageRepository;
     private File file;
@@ -116,15 +115,21 @@ public class CustomerServiceImpl implements CustomerService {
         try {
             Customer customer = customerRepository.findById(updateRequest.getId()).orElse(null);
 
-            String fileName = updateRequest.getProfilePictureRequest().getImage().getOriginalFilename();
-            fileName = UUID.randomUUID().toString().concat(this.getExtension(fileName));
+            // Check if the profile picture request is null or not
+            if (updateRequest.getProfilePictureRequest() != null) {
 
-            file = this.convertToFile(updateRequest.getProfilePictureRequest().getImage(), fileName);
-            String TEMP_URL = this.uploadFile(file, fileName);
-            file.delete();
+                String fileName = updateRequest.getProfilePictureRequest().getImage().getOriginalFilename();
+                fileName = UUID.randomUUID().toString().concat(this.getExtension(fileName));
 
-            ProfilePicture profilePicture = ProfilePicture.builder().name(TEMP_URL).uploadedAt(LocalDateTime.now()).build();
-            profileImageRepository.saveAndFlush(profilePicture);
+                file = this.convertToFile(updateRequest.getProfilePictureRequest().getImage(), fileName);
+                String TEMP_URL = this.uploadFile(file, fileName);
+                file.delete();
+
+                ProfilePicture profilePicture = ProfilePicture.builder().name(TEMP_URL).uploadedAt(LocalDateTime.now()).build();
+                profileImageRepository.saveAndFlush(profilePicture);
+                // Update the profile picture in the customer entity
+                customer.setProfilePicture(profilePicture);
+            }
 
             Customer customer1 = Customer.builder()
                     .id(updateRequest.getId())
@@ -138,7 +143,7 @@ public class CustomerServiceImpl implements CustomerService {
                     .address(updateRequest.getAddress())
                     .userCredential(customer.getUserCredential())
                     .isActive(customer.getIsActive())
-                    .profilePicture(profilePicture)
+                    .profilePicture(customer.getProfilePicture()) // Use the existing profile picture if not updated
                     .build();
 
             customerRepository.save(customer1);
@@ -150,14 +155,17 @@ public class CustomerServiceImpl implements CustomerService {
                     .birthDate(customer1.getBirthDate())
                     .gender(customer1.getGender())
                     .address(customer1.getAddress())
-                    .images(profilePicture.getName())
+                    .images(customer1.getProfilePicture().getName()) // Use the existing profile picture name if not updated
                     .build();
 
         } catch (Exception e) {
-            file.delete();
+            if (file != null) {
+                file.delete();
+            }
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
+
 
     @Override
     public Boolean delete(String id) {

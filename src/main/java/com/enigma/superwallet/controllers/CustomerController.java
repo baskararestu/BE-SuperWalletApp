@@ -58,21 +58,35 @@ public class CustomerController {
     }
 
     @PutMapping
-    public ResponseEntity<?> updateCustomer(@RequestParam MultipartFile image, @RequestParam String id, @RequestParam String firstName, @RequestParam String lastName, @RequestParam String phoneNumber, @RequestParam String birthDate, @RequestParam Gender gender, @RequestParam String address) {
+    public ResponseEntity<?> updateCustomer(@RequestParam(required = false) MultipartFile image, @RequestParam String id, @RequestParam String firstName, @RequestParam String lastName, @RequestParam String phoneNumber, @RequestParam String birthDate, @RequestParam Gender gender, @RequestParam String address) {
         try {
-         UpdateRequest data = UpdateRequest.builder()
-                    .id(id)
-                    .firstName(firstName)
-                    .lastName(lastName)
-                    .address(address)
-                    .gender(gender)
-                    .phoneNumber(phoneNumber)
-                    .birthDate(birthDate)
-                    .profilePictureRequest(ProfilePictureRequest.builder()
-                            .image(image)
-                            .build())
-                    .build();
-
+            UpdateRequest data;
+            if(!image.isEmpty()){
+                data = UpdateRequest.builder()
+                        .id(id)
+                        .firstName(firstName)
+                        .lastName(lastName)
+                        .address(address)
+                        .gender(gender)
+                        .phoneNumber(phoneNumber)
+                        .birthDate(birthDate)
+                        .profilePictureRequest(ProfilePictureRequest.builder()
+                                .image(image)
+                                .build())
+                        .build();
+            } else {
+                // If image is empty, set profile picture request to null
+                data = UpdateRequest.builder()
+                        .id(id)
+                        .firstName(firstName)
+                        .lastName(lastName)
+                        .address(address)
+                        .gender(gender)
+                        .phoneNumber(phoneNumber)
+                        .birthDate(birthDate)
+                        .profilePictureRequest(null)
+                        .build();
+            }
             CustomerResponse customer = customerService.update(data);
             return ResponseEntity.status(HttpStatus.OK)
                     .body(DefaultResponse.builder()
@@ -88,7 +102,6 @@ public class CustomerController {
                             .build());
         }
     }
-
 
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<?> softDeleteCustomer(@PathVariable String id) {
