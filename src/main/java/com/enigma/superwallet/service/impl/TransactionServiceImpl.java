@@ -75,8 +75,6 @@ public class TransactionServiceImpl implements TransactionsService {
             return getDeposit(depositRequest, dummyBankId, amount, account);
         } catch (ResponseStatusException e) {
             throw e;
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An internal server error occurred", e);
         }
     }
 

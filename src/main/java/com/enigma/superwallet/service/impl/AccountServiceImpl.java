@@ -127,6 +127,7 @@ public class AccountServiceImpl implements AccountService {
         return AccountResponse.builder()
                 .id(account.getId())
                 .accountNumber(account.getAccountNumber())
+                .customer(account.getCustomer())
                 .currency(account.getCurrency())
                 .balance(account.getBalance())
                 .build();

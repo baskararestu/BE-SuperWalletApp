@@ -2,6 +2,6 @@ FROM adoptopenjdk/openjdk11:alpine-slim
 
 WORKDIR /app
 
-COPY ./target/super-wallet-backend.jar /app/super-wallet-backend.jar
+COPY target/super-wallet-0.0.1-SNAPSHOT.jar /app/super-wallet-0.0.1-SNAPSHOT.jar
 
-CMD ["java", "-jar", "super-wallet-backend.jar"]
+CMD ["java", "-jar", "/loan-0.0.1-SNAPSHOT.jar"]
