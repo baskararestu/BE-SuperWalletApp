@@ -15,6 +15,4 @@ public class DummyBankRequest {
     private String bankNumber;
     @NotBlank
     private String cvv;
-    @NotBlank
-    private Double balance;
 }

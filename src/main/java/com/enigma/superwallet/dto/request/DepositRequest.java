@@ -11,14 +11,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder(toBuilder = true)
 public class DepositRequest {
-    @NotBlank
-    private String dummyBankId;
 
     @NotBlank
     private String accountId;
 
-    @NotBlank
-    private String pin;
+//    @NotBlank
+//    private String pin;
 
     @NotBlank
     private Double amount;

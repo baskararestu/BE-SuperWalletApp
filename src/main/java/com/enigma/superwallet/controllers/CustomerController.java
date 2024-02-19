@@ -4,6 +4,7 @@ import com.enigma.superwallet.constant.AppPath;
 import com.enigma.superwallet.constant.Gender;
 import com.enigma.superwallet.dto.request.ProfilePictureRequest;
 import com.enigma.superwallet.dto.request.RegisterRequest;
+import com.enigma.superwallet.dto.request.UpdateRequest;
 import com.enigma.superwallet.dto.response.CustomerResponse;
 import com.enigma.superwallet.dto.response.DefaultResponse;
 import com.enigma.superwallet.dto.response.ErrorResponse;
@@ -57,24 +58,22 @@ public class CustomerController {
     }
 
     @PutMapping
-    public ResponseEntity<?> updateCustomer(@RequestParam MultipartFile image, @RequestParam String id, @RequestParam String firstName, @RequestParam String lastName, @RequestParam String phoneNumber, @RequestParam String birthDate, @RequestParam Gender gender, @RequestParam String address, @RequestParam String email, @RequestParam String password) {
+    public ResponseEntity<?> updateCustomer(@RequestParam MultipartFile image, @RequestParam String id, @RequestParam String firstName, @RequestParam String lastName, @RequestParam String phoneNumber, @RequestParam String birthDate, @RequestParam Gender gender, @RequestParam String address) {
         try {
-            RegisterRequest registerRequest = RegisterRequest.builder()
+         UpdateRequest data = UpdateRequest.builder()
                     .id(id)
                     .firstName(firstName)
                     .lastName(lastName)
+                    .address(address)
+                    .gender(gender)
                     .phoneNumber(phoneNumber)
                     .birthDate(birthDate)
-                    .gender(gender)
-                    .address(address)
-                    .email(email)
-                    .password(password)
                     .profilePictureRequest(ProfilePictureRequest.builder()
                             .image(image)
                             .build())
                     .build();
 
-            CustomerResponse customer = customerService.update(registerRequest);
+            CustomerResponse customer = customerService.update(data);
             return ResponseEntity.status(HttpStatus.OK)
                     .body(DefaultResponse.builder()
                             .statusCode(HttpStatus.OK.value())

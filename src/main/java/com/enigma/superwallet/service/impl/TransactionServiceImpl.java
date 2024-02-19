@@ -70,7 +70,7 @@ public class TransactionServiceImpl implements TransactionsService {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deposit can only be made by the account owner");
             }
 
-            String dummyBankId = depositRequest.getDummyBankId();
+            String dummyBankId = customerResponse.getBankData().getId();
             double amount = depositRequest.getAmount();
             return getDeposit(depositRequest, dummyBankId, amount, account);
         } catch (ResponseStatusException e) {
