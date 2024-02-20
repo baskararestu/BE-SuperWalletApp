@@ -65,7 +65,7 @@ public class TransactionServiceImpl implements TransactionsService {
 
             CustomerResponse dataCustomer = customerService.getById(customerId);
             String currentPin = dataCustomer.getUserCredential().getPin(); // Retrieve hashed PIN from database
-            String pin = depositRequest.getPin();
+            String pin = depositRequest.getPin().toString();
 
             if (!currentPin.equals(pin) || depositRequest.getPin().isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid PIN");

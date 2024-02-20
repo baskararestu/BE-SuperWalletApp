@@ -3,6 +3,7 @@ package com.enigma.superwallet.service.impl;
 import com.enigma.superwallet.constant.ERole;
 import com.enigma.superwallet.dto.request.AuthAdminRequest;
 import com.enigma.superwallet.dto.request.LoginRequest;
+import com.enigma.superwallet.dto.request.PinRequest;
 import com.enigma.superwallet.dto.request.RegisterRequest;
 import com.enigma.superwallet.dto.response.LoginResponse;
 import com.enigma.superwallet.dto.response.RegisterResponse;
@@ -144,9 +145,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void registerPin(String pin) {
+    public void registerPin(PinRequest pin) {
         try {
-            UserCredential dataCredentialCustomer = userCredentialService.createPin(pin);
+            UserCredential dataCredentialCustomer = userCredentialService.createPin(pin.getPin());
             if (dataCredentialCustomer.getPin().isEmpty())
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error while creating pin");
         } catch (ResponseStatusException e) {

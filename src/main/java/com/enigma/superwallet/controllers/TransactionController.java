@@ -33,7 +33,7 @@ public class TransactionController {
                             .build());
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
-                    .body(DefaultResponse.builder()
+                    .body(ErrorResponse.builder()
                             .statusCode(e.getStatusCode().value())
                             .message(e.getReason())
                             .build());
@@ -71,7 +71,7 @@ public class TransactionController {
                             .build());
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
-                    .body(DefaultResponse.builder()
+                    .body(ErrorResponse.builder()
                             .statusCode(e.getStatusCode().value())
                             .message(e.getReason())
                             .build());

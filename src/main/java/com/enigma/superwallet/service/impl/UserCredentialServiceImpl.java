@@ -8,12 +8,10 @@
     import com.enigma.superwallet.service.UserCredentialService;
     import com.enigma.superwallet.util.ValidationUtil;
     import lombok.RequiredArgsConstructor;
-    import org.springframework.http.HttpStatus;
     import org.springframework.security.core.userdetails.UserDetails;
     import org.springframework.security.core.userdetails.UsernameNotFoundException;
     import org.springframework.security.crypto.password.PasswordEncoder;
     import org.springframework.stereotype.Service;
-    import org.springframework.web.server.ResponseStatusException;
 
     @Service
     @RequiredArgsConstructor
@@ -61,9 +59,7 @@
 
         @Override
         public UserCredential createPin(String pin) {
-
             String token = util.extractTokenFromHeader();
-
             String userId = jwtUtil.getUserInfoByToken(token).get("userId");
 
             UserCredential userCredential = userCredentialRepository.findById(userId)
@@ -73,4 +69,5 @@
 
             return userCredentialRepository.save(userCredential);
         }
+
     }
