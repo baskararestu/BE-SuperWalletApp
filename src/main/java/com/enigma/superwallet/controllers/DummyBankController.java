@@ -4,11 +4,11 @@ import com.enigma.superwallet.constant.AppPath;
 import com.enigma.superwallet.dto.request.DummyBankRequest;
 import com.enigma.superwallet.dto.response.DefaultResponse;
 import com.enigma.superwallet.dto.response.DummyBankResponse;
+import com.enigma.superwallet.dto.response.ErrorResponse;
 import com.enigma.superwallet.service.DummyBankService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -31,11 +31,30 @@ public class DummyBankController {
                             .build());
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
-                    .body(DefaultResponse.builder()
+                    .body(ErrorResponse.builder()
+                            .statusCode(e.getStatusCode().value())
+                            .message(e.getReason())
+                            .build());
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getDummyBankByCustomerLoggedIn(@PathVariable String id) {
+        try {
+            DummyBankResponse response = dummyBankService.getDummyBankByCustomerLoggedIn();
+            return ResponseEntity.ok(DefaultResponse.builder()
+                    .statusCode(HttpStatus.OK.value())
+                    .message("Successfully retrieved dummy bank")
+                    .data(response)
+                    .build());
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(ErrorResponse.builder()
                             .statusCode(e.getStatusCode().value())
                             .message(e.getReason())
                             .build());
         }
     }
 }
+
 

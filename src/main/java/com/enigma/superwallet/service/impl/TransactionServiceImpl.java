@@ -79,8 +79,6 @@ public class TransactionServiceImpl implements TransactionsService {
     }
 
     private DepositResponse getDeposit(DepositRequest depositRequest, String dummyBankId, double amount, AccountResponse account) {
-        dummyBankService.reduceBalance(dummyBankId, amount);
-
         AccountResponse updated = accountService.updateIdrAccountBalance(depositRequest.getAccountId(), amount);
 
         TransactionType depositTransactionType = transactionTypeService.getOrSave(

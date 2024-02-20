@@ -24,5 +24,5 @@ public class DummyBank {
     private String cvv;
 
     @Column(nullable = false)
-    private Double balance;
+    private String accountNumber;
 }

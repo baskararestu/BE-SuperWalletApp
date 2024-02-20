@@ -12,5 +12,5 @@ import lombok.NoArgsConstructor;
 public class DummyBankResponse {
     private String id;
     private String bankNumber;
-    private String balance;
+    private String accountNumber;
 }
