@@ -9,9 +9,10 @@ import java.util.List;
 
 public interface CurrencyHistoryService {
     public void saveCurrencyHistory(String date, String baseCurrency);
+
     public List<CurrencyHistoryResponse> getCurrencyHistoryByDateAndBaseCurrency(String date, String baseCurrency);
 
     public CurrencyHistoryResponse getCurrencyRate(String baseCurrency, String targetCurrency);
 
-    Page<CurrencyHistoryResponse> getCurrencies(String name, String type, Long date, Integer page, Integer size);
+    Page<CurrencyHistoryResponse> getCurrencies(String fromDate, String toDate, String baseCurrency, Integer page, Integer size);
 }
