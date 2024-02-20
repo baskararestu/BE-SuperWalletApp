@@ -64,7 +64,7 @@ public class TransactionServiceImpl implements TransactionsService {
             String customerId = jwtUtil.getUserInfoByToken(token).get("customerId");
 
             CustomerResponse dataCustomer = customerService.getById(customerId);
-            String currentPin = dataCustomer.getUserCredential().getPin(); // Retrieve hashed PIN from database
+            String currentPin = dataCustomer.getUserCredential().getPin();
             String pin = depositRequest.getPin().toString();
 
             if (!currentPin.equals(pin) || depositRequest.getPin().isEmpty()) {
@@ -117,6 +117,13 @@ public class TransactionServiceImpl implements TransactionsService {
         String token = util.extractTokenFromHeader();
 
         String customerId = jwtUtil.getUserInfoByToken(token).get("customerId");
+
+        CustomerResponse dataCustomer = customerService.getById(customerId);
+        String currentPin = dataCustomer.getUserCredential().getPin();
+        String pin = request.getPin();
+        if (!currentPin.equals(pin) || request.getPin().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid PIN");
+        }
         if(!customerId.equals(sender.getCustomer().getId()))
             throw new ResponseStatusException(HttpStatus.CONFLICT,"Invalid process");
 
@@ -191,6 +198,13 @@ public class TransactionServiceImpl implements TransactionsService {
         String token = util.extractTokenFromHeader();
 
         String customerId = jwtUtil.getUserInfoByToken(token).get("customerId");
+        CustomerResponse dataCustomer = customerService.getById(customerId);
+
+        String currentPin = dataCustomer.getUserCredential().getPin();
+        String pin = request.getPin();
+        if (!currentPin.equals(pin) || request.getPin().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid PIN");
+        }
         if (account == null)
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found");
 

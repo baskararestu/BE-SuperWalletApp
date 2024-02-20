@@ -13,4 +13,5 @@ public class TransferRequest {
     private String fromNumber;
     private Double amountTransfer;
     private String toNumber;
+    private String pin;
 }
