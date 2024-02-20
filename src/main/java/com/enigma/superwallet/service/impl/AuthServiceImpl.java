@@ -3,6 +3,7 @@ package com.enigma.superwallet.service.impl;
 import com.enigma.superwallet.constant.ERole;
 import com.enigma.superwallet.dto.request.AuthAdminRequest;
 import com.enigma.superwallet.dto.request.LoginRequest;
+import com.enigma.superwallet.dto.request.PinRequest;
 import com.enigma.superwallet.dto.request.RegisterRequest;
 import com.enigma.superwallet.dto.response.LoginResponse;
 import com.enigma.superwallet.dto.response.RegisterResponse;
@@ -140,6 +141,17 @@ public class AuthServiceImpl implements AuthService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "User admin already exist");
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An internal server error occurred", e);
+        }
+    }
+
+    @Override
+    public void registerPin(PinRequest pin) {
+        try {
+            UserCredential dataCredentialCustomer = userCredentialService.createPin(pin.getPin());
+            if (dataCredentialCustomer.getPin().isEmpty())
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error while creating pin");
+        } catch (ResponseStatusException e) {
+            throw new ResponseStatusException(e.getStatusCode(), e.getReason());
         }
     }
 }

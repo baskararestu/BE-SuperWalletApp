@@ -30,6 +30,9 @@ public class UserCredential {
     @Column
     private String password;
 
+    @Column
+    private String pin;
+
     @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role;

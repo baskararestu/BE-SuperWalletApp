@@ -4,6 +4,7 @@ package com.enigma.superwallet.controllers;
 import com.enigma.superwallet.constant.AppPath;
 import com.enigma.superwallet.dto.request.AuthAdminRequest;
 import com.enigma.superwallet.dto.request.LoginRequest;
+import com.enigma.superwallet.dto.request.PinRequest;
 import com.enigma.superwallet.dto.request.RegisterRequest;
 import com.enigma.superwallet.dto.response.*;
 import com.enigma.superwallet.service.AuthService;
@@ -64,6 +65,18 @@ public class AuthController {
             message="Successfully create admin account";
             return mapToResponseEntity(HttpStatus.CREATED,message,data);
         } catch (ResponseStatusException e) {
+            return mapToResponseEntity((HttpStatus) e.getStatusCode(),e.getReason());
+        }
+    }
+
+    @PostMapping("/pin")
+    @PreAuthorize("hasRole('ROLE_CUSTOMER')")
+    public ResponseEntity<?> createPinCustomer(@RequestBody PinRequest pinRequest){
+        try {
+            authService.registerPin(pinRequest);
+            message="successfully create pin";
+            return mapToResponseEntity(HttpStatus.CREATED,message);
+        }catch (ResponseStatusException e){
             return mapToResponseEntity((HttpStatus) e.getStatusCode(),e.getReason());
         }
     }

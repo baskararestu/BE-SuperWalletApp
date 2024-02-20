@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class WithdrawalRequest {
     private String accountId;
     private Double amount;
+    private String pin;
 }

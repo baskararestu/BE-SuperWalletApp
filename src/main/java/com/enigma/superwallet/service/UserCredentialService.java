@@ -10,4 +10,5 @@ public interface UserCredentialService extends UserDetailsService {
     AppUser loadUserByUserId(String id);
     UserCredential updateUserCredential(UserCredential userCredential);
     boolean isSuperAdminExists(ERole roleName);
+    UserCredential createPin(String pin);
 }

@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -33,88 +34,80 @@ public class DummyBankServiceImpl implements DummyBankService {
         try {
             String token = util.extractTokenFromHeader();
 
-            String customerId = jwtUtil.getUserInfoByToken(token).get("userId");
-            System.out.println(customerId);
+            String customerId = jwtUtil.getUserInfoByToken(token).get("customerId");
+            CustomerResponse customerData = customerService.getById(customerId);
 
-            Double dummyBalance = 10000000.0;
+            if (customerData == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found");
+            }
+
+            if (customerData.getBankData() != null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Customer already has a bank account");
+            }
+
+            Random random = new Random();
+            String randomDigits = String.format("%08d", random.nextInt(1000000000));
+
+            String accountNumber = "1723" + randomDigits;
+
             DummyBank dummyBank = DummyBank.builder()
-                    .bankNumber(dummyBankRequest.getBankNumber())
+                    .cardNumber(dummyBankRequest.getCardNumber())
+                    .accountNumber(accountNumber)
+                    .holderName(dummyBankRequest.getHolderName())
+                    .expDate(dummyBankRequest.getExpDate())
                     .cvv(dummyBankRequest.getCvv())
-                    .balance(dummyBalance)
                     .build();
 
             dummyBank = dummyBankRepo.save(dummyBank);
-            Optional<Customer> customer = customerService.getCustomerByUserCredentialId(customerId);
+            CustomerResponse customer = customerService.getById(customerId);
             CustomerResponse customerResponse = CustomerResponse.builder()
-                    .id(customer.get().getId())
-                    .firstName(customer.get().getFirstName())
-                    .lastName(customer.get().getLastName())
-                    .phoneNumber(customer.get().getPhoneNumber())
-                    .address(customer.get().getAddress())
-                    .gender(customer.get().getGender())
-                    .birthDate(customer.get().getBirthDate())
+                    .id(customer.getId())
+                    .firstName(customer.getFirstName())
+                    .lastName(customer.getLastName())
+                    .phoneNumber(customer.getPhoneNumber())
+                    .address(customer.getAddress())
+                    .gender(customer.getGender())
+                    .birthDate(customer.getBirthDate())
                     .userCredential(UserCredentialResponse.builder()
-                            .email(customer.get().getUserCredential().getEmail())
-                            .role(customer.get().getUserCredential().getRole().getRoleName())
+                            .email(customer.getUserCredential().getEmail())
+                            .role(customer.getUserCredential().getRole())
+                            .pin(customer.getUserCredential().getPin())
                             .build())
                     .build();
             if (customerResponse == null) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found");
             }
             customerService.updateDummyBankId(customerResponse.getId(), dummyBank.getId());
-            String formattedBalance = String.format("%.2f", dummyBank.getBalance());
 
             return DummyBankResponse.builder()
                     .id(dummyBank.getId())
-                    .bankNumber(dummyBank.getBankNumber())
-                    .balance(formattedBalance)
+                    .holderName(dummyBank.getHolderName())
+                    .cardNumber(dummyBank.getCardNumber())
+                    .accountNumber(dummyBank.getAccountNumber())
+                    .expDate(dummyBank.getExpDate())
                     .build();
         } catch (ResponseStatusException e) {
             throw e;
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An internal server error occurred", e);
         }
     }
 
     @Override
-    public DummyBankResponse getDummyBankById(String id) {
-        Optional<DummyBank> optionalDummyBank = dummyBankRepo.findById(id);
+    public DummyBankResponse getDummyBankByCustomerLoggedIn() {
+        String token = util.extractTokenFromHeader();
+        String customerId = jwtUtil.getUserInfoByToken(token).get("customerId");
+        CustomerResponse customerData = customerService.getById(customerId);
+        Optional<DummyBank> optionalDummyBank = dummyBankRepo.findById(customerData.getBankData().getId());
         if (optionalDummyBank.isPresent()) {
             DummyBank dummyBank = optionalDummyBank.get();
-            String formattedBalance = String.format("%.2f", dummyBank.getBalance());
             return DummyBankResponse.builder()
                     .id(dummyBank.getId())
-                    .bankNumber(dummyBank.getBankNumber())
-                    .balance(formattedBalance)
+                    .holderName(dummyBank.getHolderName())
+                    .cardNumber(dummyBank.getCardNumber())
+                    .accountNumber(dummyBank.getAccountNumber())
+                    .expDate(dummyBank.getExpDate())
                     .build();
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Dummy bank not found");
-        }
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public DummyBankResponse reduceBalance(String id, double amount) {
-        // Retrieve the DummyBank entity
-        Optional<DummyBank> optionalDummyBank = dummyBankRepo.findById(id);
-        if (optionalDummyBank.isPresent()) {
-            DummyBank dummyBank = optionalDummyBank.get();
-
-            if (dummyBank.getBalance() >= amount) {
-                dummyBank.setBalance(dummyBank.getBalance() - amount);
-
-                dummyBank = dummyBankRepo.save(dummyBank);
-
-                String formattedBalance = String.format("%.2f", dummyBank.getBalance());
-
-                return DummyBankResponse.builder()
-                        .id(dummyBank.getId())
-                        .bankNumber(dummyBank.getBankNumber())
-                        .balance(formattedBalance)
-                        .build();
-            } else {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient balance");
-            }
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Dummy bank not found");
         }

@@ -12,7 +12,11 @@ import lombok.NoArgsConstructor;
 @Builder(toBuilder = true)
 public class DummyBankRequest {
     @NotBlank
-    private String bankNumber;
+    private String cardNumber;
     @NotBlank
     private String cvv;
+    @NotBlank
+    private String holderName;
+    @NotBlank
+    private String expDate;
 }

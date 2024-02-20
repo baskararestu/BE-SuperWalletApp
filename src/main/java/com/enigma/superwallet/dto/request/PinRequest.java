@@ -1,17 +1,14 @@
-package com.enigma.superwallet.dto.response;
+package com.enigma.superwallet.dto.request;
 
-import com.enigma.superwallet.constant.ERole;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
 @Builder(toBuilder = true)
-public class UserCredentialResponse {
-    private String email;
-    private ERole role;
+public class PinRequest {
     private String pin;
 }

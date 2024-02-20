@@ -2,6 +2,7 @@ package com.enigma.superwallet.service;
 
 import com.enigma.superwallet.dto.request.AuthAdminRequest;
 import com.enigma.superwallet.dto.request.LoginRequest;
+import com.enigma.superwallet.dto.request.PinRequest;
 import com.enigma.superwallet.dto.request.RegisterRequest;
 import com.enigma.superwallet.dto.response.LoginAdminResponse;
 import com.enigma.superwallet.dto.response.LoginResponse;
@@ -12,4 +13,5 @@ public interface AuthService {
     LoginResponse login(LoginRequest loginRequest);
     RegisterResponse registerSuperAdmin(AuthAdminRequest authAdminRequest);
     RegisterResponse registerAdmin(AuthAdminRequest authAdminRequest);
+    void registerPin(PinRequest pin);
 }

@@ -17,12 +17,18 @@ public class DummyBank {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @Column(nullable = false)
+    private String cardNumber;
+
     @Column(nullable = false, unique = true)
-    private String bankNumber;
+    private String accountNumber;
 
     @Column(nullable = false)
     private String cvv;
 
     @Column(nullable = false)
-    private Double balance;
+    private String holderName;
+
+    @Column(nullable = false)
+    private String expDate;
 }
