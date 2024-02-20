@@ -142,4 +142,15 @@ public class AuthServiceImpl implements AuthService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An internal server error occurred", e);
         }
     }
+
+    @Override
+    public void registerPin(String pin) {
+        try {
+            UserCredential dataCredentialCustomer = userCredentialService.createPin(pin);
+            if (dataCredentialCustomer.getPin().isEmpty())
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error while creating pin");
+        } catch (ResponseStatusException e) {
+            throw new ResponseStatusException(e.getStatusCode(), e.getReason());
+        }
+    }
 }

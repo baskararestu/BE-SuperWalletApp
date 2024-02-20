@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 @Builder(toBuilder = true)
 public class DummyBankResponse {
     private String id;
-    private String bankNumber;
+    private String holderName;
+    private String cardNumber;
     private String accountNumber;
+    private String expDate;
 }

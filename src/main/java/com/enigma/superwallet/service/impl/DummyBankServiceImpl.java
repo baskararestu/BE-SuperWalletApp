@@ -36,6 +36,7 @@ public class DummyBankServiceImpl implements DummyBankService {
 
             String customerId = jwtUtil.getUserInfoByToken(token).get("customerId");
             CustomerResponse customerData = customerService.getById(customerId);
+
             if (customerData == null) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found");
             }
@@ -45,29 +46,32 @@ public class DummyBankServiceImpl implements DummyBankService {
             }
 
             Random random = new Random();
-            String randomDigits = String.format("%015d", random.nextInt(1000000000));
+            String randomDigits = String.format("%08d", random.nextInt(1000000000));
 
             String accountNumber = "1723" + randomDigits;
 
             DummyBank dummyBank = DummyBank.builder()
-                    .bankNumber(dummyBankRequest.getBankNumber())
+                    .cardNumber(dummyBankRequest.getCardNumber())
                     .accountNumber(accountNumber)
+                    .holderName(dummyBankRequest.getHolderName())
+                    .expDate(dummyBankRequest.getExpDate())
                     .cvv(dummyBankRequest.getCvv())
                     .build();
 
             dummyBank = dummyBankRepo.save(dummyBank);
-            Optional<Customer> customer = customerService.getCustomerByUserCredentialId(customerId);
+            CustomerResponse customer = customerService.getById(customerId);
             CustomerResponse customerResponse = CustomerResponse.builder()
-                    .id(customer.get().getId())
-                    .firstName(customer.get().getFirstName())
-                    .lastName(customer.get().getLastName())
-                    .phoneNumber(customer.get().getPhoneNumber())
-                    .address(customer.get().getAddress())
-                    .gender(customer.get().getGender())
-                    .birthDate(customer.get().getBirthDate())
+                    .id(customer.getId())
+                    .firstName(customer.getFirstName())
+                    .lastName(customer.getLastName())
+                    .phoneNumber(customer.getPhoneNumber())
+                    .address(customer.getAddress())
+                    .gender(customer.getGender())
+                    .birthDate(customer.getBirthDate())
                     .userCredential(UserCredentialResponse.builder()
-                            .email(customer.get().getUserCredential().getEmail())
-                            .role(customer.get().getUserCredential().getRole().getRoleName())
+                            .email(customer.getUserCredential().getEmail())
+                            .role(customer.getUserCredential().getRole())
+                            .pin(customer.getUserCredential().getPin())
                             .build())
                     .build();
             if (customerResponse == null) {
@@ -77,8 +81,10 @@ public class DummyBankServiceImpl implements DummyBankService {
 
             return DummyBankResponse.builder()
                     .id(dummyBank.getId())
-                    .bankNumber(dummyBank.getBankNumber())
+                    .holderName(dummyBank.getHolderName())
+                    .cardNumber(dummyBank.getCardNumber())
                     .accountNumber(dummyBank.getAccountNumber())
+                    .expDate(dummyBank.getExpDate())
                     .build();
         } catch (ResponseStatusException e) {
             throw e;
@@ -97,8 +103,10 @@ public class DummyBankServiceImpl implements DummyBankService {
             DummyBank dummyBank = optionalDummyBank.get();
             return DummyBankResponse.builder()
                     .id(dummyBank.getId())
-                    .bankNumber(dummyBank.getBankNumber())
+                    .holderName(dummyBank.getHolderName())
+                    .cardNumber(dummyBank.getCardNumber())
                     .accountNumber(dummyBank.getAccountNumber())
+                    .expDate(dummyBank.getExpDate())
                     .build();
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Dummy bank not found");

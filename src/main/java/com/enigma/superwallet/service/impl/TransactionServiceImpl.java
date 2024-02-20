@@ -15,13 +15,14 @@ import com.enigma.superwallet.service.*;
 import com.enigma.superwallet.util.ValidationUtil;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
@@ -44,16 +45,17 @@ public class TransactionServiceImpl implements TransactionsService {
 
     private final AccountService accountService;
     private final CustomerService customerService;
-    private final DummyBankService dummyBankService;
     private final TransactionTypeService transactionTypeService;
     private final TransactionRepositroy transactionRepositroy;
     private final CurrencyHistoryService currencyHistoryService;
     private final ValidationUtil util;
     private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder; // Inject PasswordEncoder
+
 
     private double fee = 7000;
 
-    @Transactional
+    @Transactional(rollbackOn = Exception.class)
     @Override
     public DepositResponse deposit(DepositRequest depositRequest) {
         try {
@@ -61,24 +63,29 @@ public class TransactionServiceImpl implements TransactionsService {
 
             String customerId = jwtUtil.getUserInfoByToken(token).get("customerId");
 
-            CustomerResponse customerResponse = customerService.getById(customerId);
+            CustomerResponse dataCustomer = customerService.getById(customerId);
+            String currentPin = dataCustomer.getUserCredential().getPin(); // Retrieve hashed PIN from database
+            String pin = depositRequest.getPin();
+
+            if (!currentPin.equals(pin) || depositRequest.getPin().isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid PIN");
+            }
+
             AccountResponse account = accountService.getById(depositRequest.getAccountId());
-            if (customerResponse == null) {
+            if (dataCustomer == null) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found");
             }
             if (!account.getCustomer().getId().equals(customerId)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Deposit can only be made by the account owner");
             }
 
-            String dummyBankId = customerResponse.getBankData().getId();
             double amount = depositRequest.getAmount();
-            return getDeposit(depositRequest, dummyBankId, amount, account);
+            return getDeposit(depositRequest, amount, account);
         } catch (ResponseStatusException e) {
             throw e;
         }
     }
-
-    private DepositResponse getDeposit(DepositRequest depositRequest, String dummyBankId, double amount, AccountResponse account) {
+    private DepositResponse getDeposit(DepositRequest depositRequest, double amount, AccountResponse account) {
         AccountResponse updated = accountService.updateIdrAccountBalance(depositRequest.getAccountId(), amount);
 
         TransactionType depositTransactionType = transactionTypeService.getOrSave(

@@ -102,6 +102,7 @@ public class CustomerServiceImpl implements CustomerService {
                     .userCredential(UserCredentialResponse.builder()
                             .email(customer.getUserCredential().getEmail())
                             .role(customer.getUserCredential().getRole().getRoleName())
+                            .pin(customer.getUserCredential().getPin())
                             .build())
                     .bankData(customer.getDummyBank());
 

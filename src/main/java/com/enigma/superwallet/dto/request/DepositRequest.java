@@ -15,8 +15,8 @@ public class DepositRequest {
     @NotBlank
     private String accountId;
 
-//    @NotBlank
-//    private String pin;
+    @NotBlank
+    private String pin;
 
     @NotBlank
     private Double amount;

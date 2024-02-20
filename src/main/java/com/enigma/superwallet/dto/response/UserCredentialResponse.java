@@ -13,4 +13,5 @@ import lombok.NoArgsConstructor;
 public class UserCredentialResponse {
     private String email;
     private ERole role;
+    private String pin;
 }

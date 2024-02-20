@@ -67,4 +67,16 @@ public class AuthController {
             return mapToResponseEntity((HttpStatus) e.getStatusCode(),e.getReason());
         }
     }
+
+    @PostMapping("/pin")
+    @PreAuthorize("hasRole('ROLE_CUSTOMER')")
+    public ResponseEntity<?> createPinCustomer(@RequestBody String pin){
+        try {
+            authService.registerPin(pin);
+            message="successfully create pin";
+            return mapToResponseEntity(HttpStatus.CREATED,message);
+        }catch (ResponseStatusException e){
+            return mapToResponseEntity((HttpStatus) e.getStatusCode(),e.getReason());
+        }
+    }
 }

@@ -12,4 +12,5 @@ public interface AuthService {
     LoginResponse login(LoginRequest loginRequest);
     RegisterResponse registerSuperAdmin(AuthAdminRequest authAdminRequest);
     RegisterResponse registerAdmin(AuthAdminRequest authAdminRequest);
+    void registerPin(String pin);
 }
