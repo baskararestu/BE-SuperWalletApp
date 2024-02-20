@@ -4,7 +4,6 @@ import com.enigma.superwallet.constant.ERole;
 import com.enigma.superwallet.dto.request.AuthAdminRequest;
 import com.enigma.superwallet.dto.request.LoginRequest;
 import com.enigma.superwallet.dto.request.RegisterRequest;
-import com.enigma.superwallet.dto.response.LoginAdminResponse;
 import com.enigma.superwallet.dto.response.LoginResponse;
 import com.enigma.superwallet.dto.response.RegisterResponse;
 import com.enigma.superwallet.entity.*;
@@ -29,8 +28,6 @@ import static com.enigma.superwallet.mapper.UserCredentialMapper.*;
 import static com.enigma.superwallet.mapper.AuthResponseMapper.*;
 import static com.enigma.superwallet.mapper.AdminMapper.*;
 import static com.enigma.superwallet.mapper.CustomerMapper.*;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -117,8 +114,7 @@ public class AuthServiceImpl implements AuthService {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             AppUser appUser = (AppUser) authentication.getPrincipal();
             String token = jwtUtil.generateToken(appUser);
-           Optional<Customer> customerData= customerService.getCustomerByUserCredentialId(appUser.getId());
-            return mapToLoginResponse(appUser.getRole(), token,customerData.get().getId());
+            return mapToLoginResponse(appUser.getRole(), token);
         } catch (BadCredentialsException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Invalid email or password", e);
         } catch (Exception e) {

@@ -9,12 +9,16 @@ import com.enigma.superwallet.dto.response.RegisterResponse;
 import com.enigma.superwallet.entity.AppUser;
 import com.enigma.superwallet.entity.Customer;
 import com.enigma.superwallet.entity.UserCredential;
+import com.enigma.superwallet.security.JwtUtil;
 import com.enigma.superwallet.service.CustomerService;
+import com.enigma.superwallet.util.ValidationUtil;
 
+import java.util.Map;
 import java.util.Optional;
 
 public class AuthResponseMapper {
-
+    private static ValidationUtil validationUtil;
+    private static JwtUtil jwtUtil;
     public static RegisterResponse mapToRegisterResponse(UserCredential userCredential, AuthAdminRequest authAdminRequest) {
         return RegisterResponse.builder()
                 .email(userCredential.getEmail())
@@ -33,9 +37,8 @@ public class AuthResponseMapper {
                 .build();
     }
 
-    public static LoginResponse mapToLoginResponse(ERole role, String token,String customerId) {
+    public static LoginResponse mapToLoginResponse(ERole role, String token) {
         return LoginResponse.builder()
-                .customerId(customerId)
                 .token(token)
                 .role(role.name())
                 .build();
