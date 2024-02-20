@@ -91,7 +91,7 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerResponse getById(String id) {
         Customer customer = customerRepository.findById(id).orElse(null);
         if (customer != null && customer.getIsActive()) {
-            return CustomerResponse.builder()
+            CustomerResponse.CustomerResponseBuilder responseBuilder = CustomerResponse.builder()
                     .id(customer.getId())
                     .firstName(customer.getFirstName())
                     .lastName(customer.getLastName())
@@ -103,8 +103,15 @@ public class CustomerServiceImpl implements CustomerService {
                             .email(customer.getUserCredential().getEmail())
                             .role(customer.getUserCredential().getRole().getRoleName())
                             .build())
-                    .bankData(customer.getDummyBank())
-                    .build();
+                    .bankData(customer.getDummyBank());
+
+            if (customer.getProfilePicture() != null) {
+                responseBuilder.images(customer.getProfilePicture().getName());
+            } else {
+                responseBuilder.images(null); // or set it to an empty string, depending on your requirement
+            }
+
+            return responseBuilder.build();
         }
         return null;
     }
