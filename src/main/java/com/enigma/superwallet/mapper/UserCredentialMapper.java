@@ -18,6 +18,7 @@ public class UserCredentialMapper {
                 .role(role)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
+                .pin("")
                 .build();
     }
 

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -21,33 +22,33 @@ import java.util.List;
 public class CurrencyHistoryController {
     private final CurrencyHistoryService currencyHistoryService;
 
-//    @PostMapping("/today")
-//    public ResponseEntity<?> getCurrencyHistory(
-//            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-//            @RequestParam("baseCurrency") String baseCurrency
-//    ) {
-//        try {
-//
-//            List<CurrencyHistoryResponse> currencyHistoryList = currencyHistoryService.getCurrencyHistoryByDateAndBaseCurrency(date.toString(), baseCurrency);
-//            return ResponseEntity.status(HttpStatus.OK).body(DefaultResponse.builder()
-//                    .message("Success get history currency rate")
-//                    .statusCode(HttpStatus.OK.value())
-//                    .data(currencyHistoryList)
-//                    .build());
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//                    .body(ErrorResponse.builder()
-//                            .statusCode(HttpStatus.BAD_REQUEST.value())
-//                            .message(e.getMessage())
-//                            .build());
-//        } catch (ResponseStatusException e) {
-//            return ResponseEntity.status(e.getStatusCode())
-//                    .body(ErrorResponse.builder()
-//                            .statusCode(e.getStatusCode().value())
-//                            .message(e.getMessage())
-//                            .build());
-//        }
-//    }
+    @PostMapping("/today")
+    public ResponseEntity<?> getCurrencyHistory(
+            @RequestParam("baseCurrency") String baseCurrency
+    ) {
+        try {
+            LocalDate today = LocalDate.now();
+            String formattedDate = today.format(DateTimeFormatter.ISO_DATE);
+            List<CurrencyHistoryResponse> currencyHistoryList = currencyHistoryService.getCurrencyHistoryByDateAndBaseCurrency(formattedDate, baseCurrency);
+            return ResponseEntity.status(HttpStatus.OK).body(DefaultResponse.builder()
+                    .message("Success get history currency rate")
+                    .statusCode(HttpStatus.OK.value())
+                    .data(currencyHistoryList)
+                    .build());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ErrorResponse.builder()
+                            .statusCode(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .build());
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(ErrorResponse.builder()
+                            .statusCode(e.getStatusCode().value())
+                            .message(e.getMessage())
+                            .build());
+        }
+    }
 
     @GetMapping("/get")
     public ResponseEntity<?> getRateHistory(@RequestParam String baseCurrency, @RequestParam String targetCurrency) {
