@@ -155,7 +155,10 @@ public class CustomerServiceImpl implements CustomerService {
                     .build();
 
             customerRepository.save(customer1);
-
+            String profilePictureName = null;
+            if (customer1.getProfilePicture() != null) {
+                profilePictureName = customer1.getProfilePicture().getName();
+            }
             return CustomerResponse.builder()
                     .firstName(customer1.getFirstName())
                     .lastName(customer1.getLastName())
@@ -163,7 +166,7 @@ public class CustomerServiceImpl implements CustomerService {
                     .birthDate(customer1.getBirthDate())
                     .gender(customer1.getGender())
                     .address(customer1.getAddress())
-                    .images(customer1.getProfilePicture().getName()) // Use the existing profile picture name if not updated
+                    .images(profilePictureName) // Use the existing profile picture name if not updated
                     .build();
 
         } catch (Exception e) {
