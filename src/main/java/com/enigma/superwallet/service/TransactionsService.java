@@ -12,5 +12,5 @@ public interface TransactionsService {
     TransferResponse transferBetweenAccount(TransferRequest request);
     TransferResponse getTransfer(TransferRequest request, AccountResponse sender, AccountResponse receiver, TransactionType transactionType);
     WithdrawalResponse withdraw(WithdrawalRequest request);
-    Page<TransferHistoryResponse> getTransferHistoriesPaging(String name, String type, Long fromDate, Long toDate, Integer page, Integer size);
+    Page<TransferHistoryResponse> getTransferHistoriesPaging(String name, Integer page, Integer size);
 }

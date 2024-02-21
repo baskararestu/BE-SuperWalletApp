@@ -81,14 +81,11 @@ public class TransactionController {
 @GetMapping
 public ResponseEntity<?>getTransactionsHistory(
         @RequestParam(name = "name",required = false) String name,
-        @RequestParam(name = "type",required = false) String type,
-        @RequestParam(name = "fromDate",required = false) Long fromDate,
-        @RequestParam(name = "toDate",required = false) Long toDate,
         @RequestParam(name = "page", required = false, defaultValue = "0") Integer page,
         @RequestParam(name = "size", required = false, defaultValue = "5") Integer size
 ){
         try {
-            Page<TransferHistoryResponse> dataResponse = transactionsService.getTransferHistoriesPaging(name, type, fromDate, toDate, page, size);
+            Page<TransferHistoryResponse> dataResponse = transactionsService.getTransferHistoriesPaging(name,page, size);
             PagingResponse pagingResponse = new PagingResponse();
 
             pagingResponse.setCurrentPage(dataResponse.getNumber());

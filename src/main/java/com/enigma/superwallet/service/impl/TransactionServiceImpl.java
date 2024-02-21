@@ -228,13 +228,13 @@ public class TransactionServiceImpl implements TransactionsService {
     }
 
     @Override
-    public Page<TransferHistoryResponse> getTransferHistoriesPaging(String name, String type, Long fromDate, Long toDate, Integer page, Integer size) {
-        Page<TransactionHistory> pageResult = transactionRepositroy.findAll(transactionSpecification(name, type, fromDate, toDate), PageRequest.of(page, size));
+    public Page<TransferHistoryResponse> getTransferHistoriesPaging(String name, Integer page, Integer size) {
+        Page<TransactionHistory> pageResult = transactionRepositroy.findAll(transactionSpecification(name), PageRequest.of(page, size));
         return pageResult.map(this::mapToTransferHistoryResponse);
     }
 
 
-    private Specification<TransactionHistory> transactionSpecification(String name, String type, Long fromDate, Long toDate) {
+    private Specification<TransactionHistory> transactionSpecification(String name) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (name != null && !name.isEmpty()) {
@@ -258,19 +258,6 @@ public class TransactionServiceImpl implements TransactionsService {
                 Predicate destinationFullNamePredicate = criteriaBuilder.like(destinationFullName, fullNamePattern);
 
                 predicates.add(criteriaBuilder.or(sourceFullNamePredicate, destinationFullNamePredicate));
-            }
-
-
-            if (type != null && !type.isEmpty()) {
-                predicates.add(criteriaBuilder.equal(root.get("transactionType").get("type"), type));
-            }
-            if (fromDate != null) {
-                LocalDateTime fromDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(fromDate), ZoneId.systemDefault());
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("transactionDate"), fromDateTime));
-            }
-            if (toDate != null) {
-                LocalDateTime toDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(toDate), ZoneId.systemDefault());
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("transactionDate"), toDateTime));
             }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
