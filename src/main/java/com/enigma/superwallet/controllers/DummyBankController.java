@@ -39,7 +39,7 @@ public class DummyBankController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getDummyBankByCustomerLoggedIn(@PathVariable String id) {
+    public ResponseEntity<?> getDummyBankByCustomerLoggedIn() {
         try {
             DummyBankResponse response = dummyBankService.getDummyBankByCustomerLoggedIn();
             return ResponseEntity.ok(DefaultResponse.builder()
