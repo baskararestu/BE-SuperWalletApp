@@ -34,7 +34,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.enigma.superwallet.mapper.TransactionsMapper.*;
 import static com.enigma.superwallet.util.WithdrawalCodeGenerator.generateUniqueWithdrawalCode;
@@ -50,8 +49,6 @@ public class TransactionServiceImpl implements TransactionsService {
     private final CurrencyHistoryService currencyHistoryService;
     private final ValidationUtil util;
     private final JwtUtil jwtUtil;
-    private final PasswordEncoder passwordEncoder; // Inject PasswordEncoder
-
 
     private double fee = 7000;
 
@@ -198,9 +195,8 @@ public class TransactionServiceImpl implements TransactionsService {
         String token = util.extractTokenFromHeader();
 
         String customerId = jwtUtil.getUserInfoByToken(token).get("customerId");
-        CustomerResponse dataCustomer = customerService.getById(customerId);
 
-        String currentPin = dataCustomer.getUserCredential().getPin();
+        String currentPin = customer.getUserCredential().getPin();
         String pin = request.getPin();
         if (!currentPin.equals(pin) || request.getPin().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid PIN");
