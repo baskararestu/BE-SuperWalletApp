@@ -1,10 +1,7 @@
 package com.enigma.superwallet.service.impl;
 
 import com.enigma.superwallet.constant.ERole;
-import com.enigma.superwallet.dto.request.AuthAdminRequest;
-import com.enigma.superwallet.dto.request.LoginRequest;
-import com.enigma.superwallet.dto.request.PinRequest;
-import com.enigma.superwallet.dto.request.RegisterRequest;
+import com.enigma.superwallet.dto.request.*;
 import com.enigma.superwallet.dto.response.LoginResponse;
 import com.enigma.superwallet.dto.response.RegisterResponse;
 import com.enigma.superwallet.entity.*;
@@ -153,5 +150,14 @@ public class AuthServiceImpl implements AuthService {
         } catch (ResponseStatusException e) {
             throw new ResponseStatusException(e.getStatusCode(), e.getReason());
         }
+    }
+
+    @Override
+    public void changePassword(ChangePasswordRequest request) {
+        if(request.getPassword()==null){
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"Cannot be null");
+        }
+        String hashedPassword = passwordEncoder.encode(request.getPassword());
+        userCredentialService.changePassword(hashedPassword);
     }
 }
