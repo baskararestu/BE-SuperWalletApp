@@ -13,14 +13,19 @@ import com.enigma.superwallet.repository.TransactionRepositroy;
 import com.enigma.superwallet.security.JwtUtil;
 import com.enigma.superwallet.service.*;
 import com.enigma.superwallet.util.ValidationUtil;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -50,6 +55,11 @@ public class TransactionServiceImpl implements TransactionsService {
     private final CurrencyHistoryService currencyHistoryService;
     private final ValidationUtil util;
     private final JwtUtil jwtUtil;
+    private final JavaMailSender javaMailSender;
+
+    @Value("${spring.mail.username}")
+    private String emailSender;
+
 
     private double fee = 7000;
 
@@ -225,7 +235,7 @@ public class TransactionServiceImpl implements TransactionsService {
                 mapToTransactionHistory(
                         totalAmount, account, withdrawalTransactionType, withdrawalCode, fee);
         transactionRepositroy.saveAndFlush(transactionHistory);
-
+        sendWithdrawalCodeToEmail(dataCustomer.getUserCredential().getEmail(), withdrawalCode);
         return mapToWithdrawalResponse(transactionHistory, withdrawalCode);
     }
 
@@ -324,4 +334,18 @@ public class TransactionServiceImpl implements TransactionsService {
     }
 
 
+
+    private void sendWithdrawalCodeToEmail(String email, String withdrawalCode) {
+        MimeMessage message = javaMailSender.createMimeMessage();
+        try {
+            MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(message, true);
+            mimeMessageHelper.setFrom(new InternetAddress(emailSender));
+            mimeMessageHelper.setSubject("Withdrawal Code");
+            mimeMessageHelper.setText("Your unique withdrawal code is: " + withdrawalCode, true);
+            mimeMessageHelper.setTo(email);
+            javaMailSender.send(message);
+        } catch (Exception e) {
+            throw new RuntimeException("Error sending email with withdrawal code.", e);
+        }
+    }
 }
