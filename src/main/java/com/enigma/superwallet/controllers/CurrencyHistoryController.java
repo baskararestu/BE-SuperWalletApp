@@ -92,11 +92,9 @@ public class CurrencyHistoryController {
     ) {
         try {
             if (fromDate == null) {
-                // Set fromDate to today's date if not provided
                 fromDate = LocalDate.now();
             }
             if (toDate == null) {
-                // Set toDate to today's date if not provided
                 toDate = LocalDate.now();
             }
 

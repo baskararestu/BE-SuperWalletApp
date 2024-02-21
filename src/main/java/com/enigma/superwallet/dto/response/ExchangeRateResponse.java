@@ -12,8 +12,8 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExchangeRateResponse {
-    private String date; // Date in "yyyy-MM-dd" format
+    private String date;
     private String base;
     private String currency;
-    private BigDecimal rate; // BigDecimal format for rate
+    private BigDecimal rate;
 }

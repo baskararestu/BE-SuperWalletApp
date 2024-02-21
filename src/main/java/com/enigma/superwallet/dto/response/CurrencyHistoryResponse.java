@@ -15,10 +15,10 @@ import java.time.format.DateTimeFormatter;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class CurrencyHistoryResponse {
-    private String date; // Date in "yyyy-MM-dd" format
+    private String date;
     private String baseCurrency;
     private String targetCurrency;
-    private BigDecimal rate; // BigDecimal format for rate
+    private BigDecimal rate;
 
     public CurrencyHistoryResponse(CurrencyHistory currencyHistory) {
         this.date = convertUnixTimestampToLocalDate(currencyHistory.getDate()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));

@@ -166,7 +166,7 @@ public class TransactionServiceImpl implements TransactionsService {
             Double totalAmountDouble = totalAmount.doubleValue();
             if (sender.getCurrency().getCode() != ECurrencyCode.IDR) {
                 BigDecimal rateNow = currency.getRate();
-                totalFee = BigDecimal.valueOf(fee).divide(rateNow, 15, RoundingMode.HALF_UP); // Divide fee by rate with specified scale and rounding mode
+                totalFee = BigDecimal.valueOf(fee).divide(rateNow, 15, RoundingMode.HALF_UP);
             } else {
                 totalFee = BigDecimal.valueOf(fee);
             }

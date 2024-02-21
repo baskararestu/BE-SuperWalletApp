@@ -111,7 +111,7 @@ public class CustomerServiceImpl implements CustomerService {
             if (customer.getProfilePicture() != null) {
                 responseBuilder.images(customer.getProfilePicture().getName());
             } else {
-                responseBuilder.images(null); // or set it to an empty string, depending on your requirement
+                responseBuilder.images(null);
             }
 
             return responseBuilder.build();
@@ -125,7 +125,6 @@ public class CustomerServiceImpl implements CustomerService {
         try {
             Customer customer = customerRepository.findById(updateRequest.getId()).orElse(null);
 
-            // Check if the profile picture request is null or not
             if (updateRequest.getProfilePictureRequest() != null) {
 
                 String fileName = updateRequest.getProfilePictureRequest().getImage().getOriginalFilename();
@@ -137,7 +136,6 @@ public class CustomerServiceImpl implements CustomerService {
 
                 ProfilePicture profilePicture = ProfilePicture.builder().name(TEMP_URL).uploadedAt(LocalDateTime.now()).build();
                 profileImageRepository.saveAndFlush(profilePicture);
-                // Update the profile picture in the customer entity
                 customer.setProfilePicture(profilePicture);
             }
 
@@ -154,7 +152,7 @@ public class CustomerServiceImpl implements CustomerService {
                     .dummyBank(customer.getDummyBank())
                     .userCredential(customer.getUserCredential())
                     .isActive(customer.getIsActive())
-                    .profilePicture(customer.getProfilePicture()) // Use the existing profile picture if not updated
+                    .profilePicture(customer.getProfilePicture()) 
                     .build();
 
             customerRepository.save(customer1);
@@ -170,7 +168,7 @@ public class CustomerServiceImpl implements CustomerService {
                     .gender(customer1.getGender())
                     .address(customer1.getAddress())
                     .bankData(customer1.getDummyBank())
-                    .images(profilePictureName) // Use the existing profile picture name if not updated
+                    .images(profilePictureName)
                     .build();
 
         } catch (Exception e) {
@@ -214,15 +212,12 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     @Override
     public void updateDummyBankId(String customerId, String dummyBankId) {
-        // Fetch customer by ID
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new RuntimeException("Customer not found with ID: " + customerId));
 
-        // Fetch dummy bank by ID
         DummyBank dummyBank = dummyBankRepository.findById(dummyBankId)
                 .orElseThrow(() -> new RuntimeException("Dummy bank not found with ID: " + dummyBankId));
 
-        // Set the dummy bank for the customer
         customer.setDummyBank(dummyBank);
 
         // Save the updated customer entity

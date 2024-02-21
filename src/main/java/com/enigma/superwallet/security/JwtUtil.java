@@ -38,7 +38,7 @@ public class JwtUtil {
         try {
             Algorithm algorithm = Algorithm.HMAC256(jwtSecret.getBytes(StandardCharsets.UTF_8));
             Optional<Customer> customer = customerService.getCustomerByUserCredentialId(appUser.getId());
-            String customerId = customer.map(Customer::getId).orElse(""); // Get customer ID or empty string if customer is empty
+            String customerId = customer.map(Customer::getId).orElse("");
             return JWT.create()
                     .withIssuer(appName)
                     .withSubject(appUser.getId())

@@ -80,7 +80,6 @@ public class AccountServiceImpl implements AccountService {
             }
             currency = optionalCurrency.get();
 
-            // Generate a random account number
             int defaultNum = 100;
             int min = 1000000;
             int max = 9999999;
