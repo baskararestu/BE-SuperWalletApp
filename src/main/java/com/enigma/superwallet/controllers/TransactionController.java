@@ -5,6 +5,7 @@ import com.enigma.superwallet.dto.request.DepositRequest;
 import com.enigma.superwallet.dto.request.TransferRequest;
 import com.enigma.superwallet.dto.request.WithdrawalRequest;
 import com.enigma.superwallet.dto.response.*;
+import com.enigma.superwallet.entity.TransactionHistory;
 import com.enigma.superwallet.service.TransactionsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -41,7 +42,7 @@ public class TransactionController {
     }
 
     @PostMapping("/send")
-    public ResponseEntity<?> transferToAccount(@RequestBody TransferRequest transferRequest){
+    public ResponseEntity<?> transferToAccount(@RequestBody TransferRequest transferRequest) {
         try {
             TransferResponse data = transactionsService.transferBetweenAccount(transferRequest);
             return ResponseEntity.status(HttpStatus.OK)
@@ -50,7 +51,7 @@ public class TransactionController {
                             .message("Successfully sending money")
                             .data(data)
                             .build());
-        }catch (ResponseStatusException e){
+        } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .body(ErrorResponse.builder()
                             .statusCode(e.getStatusCode().value())
@@ -78,17 +79,14 @@ public class TransactionController {
         }
     }
 
-@GetMapping
-public ResponseEntity<?>getTransactionsHistory(
-        @RequestParam(name = "name",required = false) String name,
-        @RequestParam(name = "type",required = false) String type,
-        @RequestParam(name = "fromDate",required = false) Long fromDate,
-        @RequestParam(name = "toDate",required = false) Long toDate,
-        @RequestParam(name = "page", required = false, defaultValue = "0") Integer page,
-        @RequestParam(name = "size", required = false, defaultValue = "5") Integer size
-){
+    @GetMapping
+    public ResponseEntity<?> getTransactionsHistory(
+            @RequestParam(name = "name", required = false) String name,
+            @RequestParam(name = "page", required = false, defaultValue = "0") Integer page,
+            @RequestParam(name = "size", required = false, defaultValue = "5") Integer size
+    ) {
         try {
-            Page<TransferHistoryResponse> dataResponse = transactionsService.getTransferHistoriesPaging(name, type, fromDate, toDate, page, size);
+            Page<TransferHistoryResponse> dataResponse = transactionsService.getTransferHistoriesPaging(name, page, size);
             PagingResponse pagingResponse = new PagingResponse();
 
             pagingResponse.setCurrentPage(dataResponse.getNumber());
@@ -103,11 +101,32 @@ public ResponseEntity<?>getTransactionsHistory(
                             .data(dataResponse.getContent())
                             .pagingResponse(pagingResponse)
                             .build());
-        } catch (ResponseStatusException e){
+        } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .body(ErrorResponse.builder()
                             .statusCode(e.getStatusCode().value())
                             .message(e.getMessage())
+                            .build());
+        }
+    }
+
+    @GetMapping("/customer")
+    public ResponseEntity<?> getTransactionCustomer() {
+        try {
+            List<TransferHistoryResponse> data = transactionsService.getTransactionHistoryByCustomerId();
+
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(DefaultResponse.builder()
+                            .statusCode(HttpStatus.OK.value())
+                            .message("successfully get customer transactions")
+                            .data(data)
+                            .build());
+
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(ErrorResponse.builder()
+                            .statusCode(e.getStatusCode().value())
+                            .message(e.getReason())
                             .build());
         }
     }

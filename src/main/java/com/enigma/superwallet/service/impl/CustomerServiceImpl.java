@@ -1,29 +1,30 @@
 package com.enigma.superwallet.service.impl;
 
-import com.enigma.superwallet.dto.request.RegisterRequest;
 import com.enigma.superwallet.dto.request.UpdateRequest;
 import com.enigma.superwallet.dto.response.CustomerResponse;
 import com.enigma.superwallet.dto.response.UserCredentialResponse;
 import com.enigma.superwallet.entity.Customer;
 import com.enigma.superwallet.entity.DummyBank;
 import com.enigma.superwallet.entity.ProfilePicture;
-import com.enigma.superwallet.entity.UserCredential;
 import com.enigma.superwallet.repository.CustomerRepository;
 import com.enigma.superwallet.repository.DummyBankRepository;
 import com.enigma.superwallet.repository.ProfileImageRepository;
 import com.enigma.superwallet.service.CustomerService;
-import com.enigma.superwallet.service.UserCredentialService;
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -37,6 +38,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -149,6 +151,7 @@ public class CustomerServiceImpl implements CustomerService {
                     .birthDate(LocalDate.parse(updateRequest.getBirthDate()))
                     .gender(updateRequest.getGender())
                     .address(updateRequest.getAddress())
+                    .dummyBank(customer.getDummyBank())
                     .userCredential(customer.getUserCredential())
                     .isActive(customer.getIsActive())
                     .profilePicture(customer.getProfilePicture()) // Use the existing profile picture if not updated
@@ -166,6 +169,7 @@ public class CustomerServiceImpl implements CustomerService {
                     .birthDate(customer1.getBirthDate())
                     .gender(customer1.getGender())
                     .address(customer1.getAddress())
+                    .bankData(customer1.getDummyBank())
                     .images(profilePictureName) // Use the existing profile picture name if not updated
                     .build();
 
@@ -192,6 +196,7 @@ public class CustomerServiceImpl implements CustomerService {
                     .birthDate(customer.getBirthDate())
                     .gender(customer.getGender())
                     .address(customer.getAddress())
+                    .dummyBank(customer.getDummyBank())
                     .isActive(false)
                     .userCredential(customer.getUserCredential())
                     .build();
@@ -245,4 +250,50 @@ public class CustomerServiceImpl implements CustomerService {
     private String getExtension(String fileName) {
         return fileName.substring(fileName.lastIndexOf("."));
     }
+
+
+    @Override
+    public Page<CustomerResponse> getCustomers(String fullName, Integer page, Integer size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return customerRepository.findAll(getCustomerSpecification(fullName), pageable)
+                .map(this::mapToCustomerResponse);
+    }
+
+    private Specification<Customer> getCustomerSpecification(String fullName) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (fullName != null && !fullName.isEmpty()) {
+                String[] names = fullName.split("\\s+");
+                String firstName = names[0];
+                String lastName = names.length > 1 ? names[1] : "";
+                Predicate firstNamePredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("firstName")), "%" + firstName.toLowerCase() + "%");
+                Predicate lastNamePredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("lastName")), "%" + lastName.toLowerCase() + "%");
+                predicates.add(criteriaBuilder.or(firstNamePredicate, lastNamePredicate));
+            }
+            predicates.add(criteriaBuilder.isTrue(root.get("isActive")));
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+
+
+    private CustomerResponse mapToCustomerResponse(Customer customer) {
+        return CustomerResponse.builder()
+                .id(customer.getId())
+                .firstName(customer.getFirstName())
+                .lastName(customer.getLastName())
+                .phoneNumber(customer.getPhoneNumber())
+                .birthDate(customer.getBirthDate())
+                .address(customer.getAddress())
+                .gender(customer.getGender())
+                .userCredential(UserCredentialResponse.builder()
+                        .email(customer.getUserCredential().getEmail())
+                        .role(customer.getUserCredential().getRole().getRoleName())
+                        .pin(customer.getUserCredential().getPin())
+                        .build())
+                .bankData(customer.getDummyBank())
+                .images(customer.getProfilePicture() != null ? customer.getProfilePicture().getName() : null)
+                .build();
+    }
+
 }

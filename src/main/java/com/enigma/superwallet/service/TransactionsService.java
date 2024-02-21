@@ -4,13 +4,18 @@ import com.enigma.superwallet.dto.request.DepositRequest;
 import com.enigma.superwallet.dto.request.TransferRequest;
 import com.enigma.superwallet.dto.request.WithdrawalRequest;
 import com.enigma.superwallet.dto.response.*;
+import com.enigma.superwallet.entity.TransactionHistory;
 import com.enigma.superwallet.entity.TransactionType;
 import org.springframework.data.domain.Page;
+
+import java.util.List;
 
 public interface TransactionsService {
     DepositResponse deposit(DepositRequest request);
     TransferResponse transferBetweenAccount(TransferRequest request);
     TransferResponse getTransfer(TransferRequest request, AccountResponse sender, AccountResponse receiver, TransactionType transactionType);
     WithdrawalResponse withdraw(WithdrawalRequest request);
-    Page<TransferHistoryResponse> getTransferHistoriesPaging(String name, String type, Long fromDate, Long toDate, Integer page, Integer size);
+    Page<TransferHistoryResponse> getTransferHistoriesPaging(String name, Integer page, Integer size);
+
+    List<TransferHistoryResponse> getTransactionHistoryByCustomerId();
 }

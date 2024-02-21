@@ -4,6 +4,7 @@ import com.enigma.superwallet.dto.request.RegisterRequest;
 import com.enigma.superwallet.dto.request.UpdateRequest;
 import com.enigma.superwallet.dto.response.CustomerResponse;
 import com.enigma.superwallet.entity.Customer;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,4 +17,5 @@ public interface CustomerService {
     Boolean delete(String id);
     Optional<Customer> getCustomerByUserCredentialId (String userCredentialId);
     void updateDummyBankId(String customerId, String dummyBankId);
+    Page<CustomerResponse> getCustomers(String fullName, Integer page, Integer size);
 }
