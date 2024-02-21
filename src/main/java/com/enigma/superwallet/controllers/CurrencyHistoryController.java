@@ -83,12 +83,22 @@ public class CurrencyHistoryController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_SUPER_ADMIN')")
-    public ResponseEntity<?> getCurrencies(@RequestParam String fromDate, @RequestParam String toDate,
-                                           @RequestParam(defaultValue = "0") Integer page,
-                                           @RequestParam(defaultValue = "10") Integer size,
-                                           @RequestParam String baseCurrency) {
+    public ResponseEntity<?> getCurrencies(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(defaultValue = "") String baseCurrency
+    ) {
         try {
-            Page<CurrencyHistoryResponse> data = currencyHistoryService.getCurrencies(fromDate, toDate, baseCurrency, page, size);
+            if (fromDate == null) {
+                fromDate = LocalDate.now();
+            }
+            if (toDate == null) {
+                toDate = LocalDate.now();
+            }
+
+            Page<CurrencyHistoryResponse> data = currencyHistoryService.getCurrencies(fromDate.toString(), toDate.toString(), baseCurrency, page, size);
 
             PagingResponse pagingResponse = new PagingResponse();
 

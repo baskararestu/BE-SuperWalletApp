@@ -52,7 +52,6 @@ public class ValidationUtil {
         return true;
     }
     public String extractTokenFromHeader() {
-        // Extract token from Authorization header
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         String authorizationHeader = request.getHeader("Authorization");
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
