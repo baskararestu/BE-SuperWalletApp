@@ -61,7 +61,7 @@ public class CustomerController {
     public ResponseEntity<?> updateCustomer(@RequestParam(required = false) MultipartFile image, @RequestParam String id, @RequestParam String firstName, @RequestParam String lastName, @RequestParam String phoneNumber, @RequestParam String birthDate, @RequestParam Gender gender, @RequestParam String address) {
         try {
             UpdateRequest data;
-            if(!image.isEmpty()){
+            if(image!=null &&!image.isEmpty()){
                 data = UpdateRequest.builder()
                         .id(id)
                         .firstName(firstName)
@@ -75,7 +75,6 @@ public class CustomerController {
                                 .build())
                         .build();
             } else {
-                // If image is empty, set profile picture request to null
                 data = UpdateRequest.builder()
                         .id(id)
                         .firstName(firstName)
