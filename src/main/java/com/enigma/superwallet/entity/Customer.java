@@ -38,11 +38,23 @@ public class Customer {
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Gender gender;
 
+    @Column(nullable = false)
+    private String address;
+
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "dummy_bank_id")
+    private DummyBank dummyBank;
+
+    @OneToOne
+    @JoinColumn(name = "profile_picture_id")
+    private ProfilePicture profilePicture;
 
     @OneToOne
     @JoinColumn(name = "user_id")

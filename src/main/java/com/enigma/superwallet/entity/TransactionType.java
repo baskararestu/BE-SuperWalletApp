@@ -18,5 +18,7 @@ public class TransactionType {
     private String id;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "transaction_type")
     private ETransactionType transactionType;
+
 }

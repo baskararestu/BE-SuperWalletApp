@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -24,14 +25,12 @@ public class Account {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @ManyToOne
+    @JoinColumn(name = "currency_id")
+    private Currency currency;
+
     @Column(name = "account_number", nullable = false, unique = true)
     private String accountNumber;
-
-    @Column(name = "currency_code", nullable = false)
-    private String currencyCode;
-
-    @Column(nullable = false)
-    private String pin;
 
     @Column(columnDefinition =  "DOUBLE PRECISION CHECK (balance >= 0)")
     private Double balance;
