@@ -5,11 +5,10 @@ import com.enigma.superwallet.constant.Gender;
 import com.enigma.superwallet.dto.request.ProfilePictureRequest;
 import com.enigma.superwallet.dto.request.RegisterRequest;
 import com.enigma.superwallet.dto.request.UpdateRequest;
-import com.enigma.superwallet.dto.response.CustomerResponse;
-import com.enigma.superwallet.dto.response.DefaultResponse;
-import com.enigma.superwallet.dto.response.ErrorResponse;
+import com.enigma.superwallet.dto.response.*;
 import com.enigma.superwallet.service.CustomerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,7 +26,7 @@ public class CustomerController {
 
     private final CustomerService customerService;
 
-    @GetMapping
+    @GetMapping("/all")
     @PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')")
     public ResponseEntity<?> getAllCustomer() {
         List<CustomerResponse> customerList = customerService.getAll();
@@ -61,7 +60,7 @@ public class CustomerController {
     public ResponseEntity<?> updateCustomer(@RequestParam(required = false) MultipartFile image, @RequestParam String id, @RequestParam String firstName, @RequestParam String lastName, @RequestParam String phoneNumber, @RequestParam String birthDate, @RequestParam Gender gender, @RequestParam String address) {
         try {
             UpdateRequest data;
-            if(image!=null &&!image.isEmpty()){
+            if (image != null && !image.isEmpty()) {
                 data = UpdateRequest.builder()
                         .id(id)
                         .firstName(firstName)
@@ -117,5 +116,32 @@ public class CustomerController {
                         .statusCode(HttpStatus.CONFLICT.value())
                         .message("Delete Failed")
                         .build());
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getAllCustomers(@RequestParam(value = "fullName", required = false) String fullName,
+                                             @RequestParam(value = "page", defaultValue = "0") Integer page,
+                                             @RequestParam(value = "size", defaultValue = "10") Integer size) {
+        try {
+            Page<CustomerResponse> customers = customerService.getCustomers(fullName, page, size);
+            PagingResponse pagingResponse = new PagingResponse();
+            pagingResponse.setCurrentPage(customers.getNumber());
+            pagingResponse.setTotalPage(customers.getTotalPages());
+            pagingResponse.setSize(customers.getSize());
+            pagingResponse.setTotalItem(customers.getTotalElements());
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(CommonResponse.builder()
+                            .statusCode(HttpStatus.OK.value())
+                            .message("Successfully get data")
+                            .data(customers.getContent())
+                            .pagingResponse(pagingResponse)
+                            .build());
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(ErrorResponse.builder()
+                            .statusCode(e.getStatusCode().value())
+                            .message(e.getReason())
+                            .build());
+        }
     }
 }
