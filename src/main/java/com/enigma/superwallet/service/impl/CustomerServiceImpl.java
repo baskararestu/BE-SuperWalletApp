@@ -149,6 +149,7 @@ public class CustomerServiceImpl implements CustomerService {
                     .birthDate(LocalDate.parse(updateRequest.getBirthDate()))
                     .gender(updateRequest.getGender())
                     .address(updateRequest.getAddress())
+                    .dummyBank(customer.getDummyBank())
                     .userCredential(customer.getUserCredential())
                     .isActive(customer.getIsActive())
                     .profilePicture(customer.getProfilePicture()) // Use the existing profile picture if not updated
@@ -166,6 +167,7 @@ public class CustomerServiceImpl implements CustomerService {
                     .birthDate(customer1.getBirthDate())
                     .gender(customer1.getGender())
                     .address(customer1.getAddress())
+                    .bankData(customer1.getDummyBank())
                     .images(profilePictureName) // Use the existing profile picture name if not updated
                     .build();
 
@@ -192,6 +194,7 @@ public class CustomerServiceImpl implements CustomerService {
                     .birthDate(customer.getBirthDate())
                     .gender(customer.getGender())
                     .address(customer.getAddress())
+                    .dummyBank(customer.getDummyBank())
                     .isActive(false)
                     .userCredential(customer.getUserCredential())
                     .build();
