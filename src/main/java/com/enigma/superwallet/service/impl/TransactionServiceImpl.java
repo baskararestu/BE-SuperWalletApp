@@ -235,7 +235,7 @@ public class TransactionServiceImpl implements TransactionsService {
                 mapToTransactionHistory(
                         totalAmount, account, withdrawalTransactionType, withdrawalCode, fee);
         transactionRepositroy.saveAndFlush(transactionHistory);
-        sendWithdrawalCodeToEmail(dataCustomer.getUserCredential().getEmail(), withdrawalCode);
+        sendWithdrawalCodeToEmail(customer.getUserCredential().getEmail(), withdrawalCode);
         return mapToWithdrawalResponse(transactionHistory, withdrawalCode);
     }
 
